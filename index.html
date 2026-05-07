@@ -2,69 +2,201 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Gestão Administrativa</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Gestão - Admin</title>
     <style>
-        body { background-color: #000; color: #fff; font-family: sans-serif; padding: 20px; }
-        h1 { color: #d4af37; text-align: center; text-transform: uppercase; border-bottom: 2px solid #d4af37; padding-bottom: 10px; }
-        .usuario-card { background: #111; border: 1px solid #333; padding: 15px; margin-bottom: 10px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; }
-        .btn-acao { background: #d4af37; color: #000; border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; }
-        b { color: #d4af37; }
+        :root {
+            --gold: #d4af37;
+            --dark: #0a0a0a;
+            --card-bg: #151515;
+            --text: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--dark);
+            color: var(--text);
+            margin: 0;
+            padding: 10px;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            padding: 20px 0;
+            border-bottom: 2px solid var(--gold);
+            margin-bottom: 20px;
+        }
+
+        header h1 {
+            color: var(--gold);
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-size: 1.5rem;
+        }
+
+        /* Grade Responsiva */
+        .grid-usuarios {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 15px;
+            transition: 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card:hover {
+            border-color: var(--gold);
+            box-shadow: 0 5px 15px rgba(212, 175, 55, 0.2);
+        }
+
+        .card b { color: var(--gold); }
+
+        .info p {
+            margin: 8px 0;
+            font-size: 0.95rem;
+            word-break: break-all;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            background: #333;
+        }
+
+        .pendente { color: #ffeb3b; border: 1px solid #ffeb3b; }
+        .liberado { color: #00ff00; border: 1px solid #00ff00; }
+
+        .btn-acoes {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-liberar { background-color: var(--gold); color: #000; }
+        .btn-liberar:hover { background-color: #fff; }
+
+        .btn-excluir { background-color: #ff4444; color: #fff; }
+
+        /* Estilo para celular */
+        @media (max-width: 480px) {
+            header h1 { font-size: 1.2rem; }
+            .grid-usuarios { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
 
-    <h1>Painel de Controlo - Gestão</h1>
-    <div id="dados-firebase">A carregar registos...</div>
+<div class="container">
+    <header>
+        <h1>Gestão Ajuda Mútua</h1>
+        <p id="contador" style="font-size: 0.8rem; color: #888;">Carregando registros...</p>
+    </header>
 
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <div id="lista-usuarios" class="grid-usuarios">
+        </div>
+</div>
 
-    <script>
-        // Use a chave que aparece no seu console do Firebase agora
-        const firebaseConfig = {
-            apiKey: "AIzaSyCzTpvbMjGMTUIxMbZJjd_Kydas", // Verifique se esta chave foi atualizada no painel
-            authDomain: "ajuda-mutua-7d99a.firebaseapp.com",
-            projectId: "ajuda-mutua-7d99a",
-            storageBucket: "ajuda-mutua-7d99a.appspot.com",
-            databaseURL: "https://ajuda-mutua-7d99a-default-rtdb.firebaseio.com/"
-        };
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
+<script>
+    // IMPORTANTE: Use sua apiKey atualizada aqui
+    const firebaseConfig = {
+        apiKey: "AIzaSyCzTpvbMjGMTUIxMbZJjd_Kydas", 
+        authDomain: "ajuda-mutua-7d99a.firebaseapp.com",
+        projectId: "ajuda-mutua-7d99a",
+        storageBucket: "ajuda-mutua-7d99a.appspot.com",
+        databaseURL: "https://ajuda-mutua-7d99a-default-rtdb.firebaseio.com/"
+    };
 
-        const db = firebase.database();
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.database();
 
-        // Esta função lê a pasta onde o seu index.html guarda os dados
+    function carregarPainel() {
+        const lista = document.getElementById('lista-usuarios');
+        const contador = document.getElementById('contador');
+
+        // Escuta a pasta 'solicitacoes' em tempo real
         db.ref('solicitacoes').on('value', (snapshot) => {
-            const container = document.getElementById('dados-firebase');
-            container.innerHTML = "";
+            lista.innerHTML = "";
+            let total = 0;
 
             if (!snapshot.exists()) {
-                container.innerHTML = "Nenhum registo encontrado.";
+                lista.innerHTML = "<p style='text-align:center; grid-column: 1/-1;'>Nenhum dado encontrado.</p>";
+                contador.innerText = "0 registros";
                 return;
             }
 
-            snapshot.forEach((child) => {
-                const user = child.val();
-                container.innerHTML += `
-                    <div class="usuario-card">
-                        <div>
-                            <p><b>Nome:</b> ${user.nome}</p>
-                            <p><b>Pix:</b> ${user.chavePix}</p>
+            snapshot.forEach((item) => {
+                total++;
+                const d = item.val();
+                const id = item.key;
+                const statusClass = d.status === 'Liberado' ? 'liberado' : 'pendente';
+
+                lista.innerHTML += `
+                    <div class="card">
+                        <div class="info">
+                            <p><b>Nome:</b> ${d.nome}</p>
+                            <p><b>Pix:</b> ${d.chavePix}</p>
+                            <p><b>Data:</b> ${d.dataSolicitacao || '--'}</p>
+                            <p><b>Status:</b> <span class="status-badge ${statusClass}">${d.status || 'Pendente'}</span></p>
                         </div>
-                        <button class="btn-acao" onclick="liberar('${child.key}')">LIBERAR SALA</button>
+                        <div class="btn-acoes">
+                            <button class="btn-liberar" onclick="liberar('${id}')">LIBERAR</button>
+                            <button class="btn-excluir" onclick="excluir('${id}')">X</button>
+                        </div>
                     </div>
                 `;
             });
+            contador.innerText = total + " usuários cadastrados";
         });
+    }
 
-        function liberar(id) {
-            if(confirm("Confirmar libertação do utilizador?")) {
-                db.ref('solicitacoes/' + id).update({ status: "Liberado" });
-                alert("Utilizador atualizado!");
-            }
+    function liberar(id) {
+        if(confirm("Liberar acesso desse usuário?")) {
+            db.ref('solicitacoes/' + id).update({
+                status: "Liberado",
+                horaLiberacao: new Date().toLocaleString()
+            });
         }
-    </script>
+    }
+
+    function excluir(id) {
+        if(confirm("Deseja apagar este registro permanentemente?")) {
+            db.ref('solicitacoes/' + id).remove();
+        }
+    }
+
+    carregarPainel();
+</script>
+
 </body>
 </html>
