@@ -3,31 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Acesso Direto</title>
+    <title>Painel de Gestão Administrativa</title>
     <style>
-        body { font-family: sans-serif; background-color: #000; color: #fff; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .card { border: 2px solid #d4af37; padding: 40px; border-radius: 20px; width: 320px; text-align: center; background: #0a0a0a; box-shadow: 0 0 20px rgba(212, 175, 55, 0.4); }
-        h2 { color: #d4af37; margin-bottom: 25px; text-transform: uppercase; letter-spacing: 2px; }
-        .icon { font-size: 50px; margin-bottom: 20px; }
-        button { width: 100%; padding: 15px; background-color: #d4af37; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; color: #000; font-size: 18px; transition: 0.3s; }
-        button:hover { background-color: #f1c40f; transform: scale(1.05); }
-        p { color: #aaa; font-size: 14px; margin-top: 20px; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #050505; color: #fff; margin: 0; padding: 20px; }
+        h1 { color: #d4af37; text-align: center; border-bottom: 2px solid #d4af37; padding-bottom: 10px; text-transform: uppercase; }
+        .container { max-width: 1000px; margin: auto; }
+        .card-usuario { background: #111; border: 1px solid #333; border-radius: 10px; padding: 20px; margin-bottom: 20px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        .info { flex: 1; min-width: 250px; }
+        .info p { margin: 5px 0; font-size: 14px; }
+        .info b { color: #d4af37; }
+        .status-pendente { color: #ffeb3b; font-weight: bold; }
+        .btn-liberar { background: #d4af37; color: #000; border: none; padding: 10px 20px; border-radius: 5px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .btn-liberar:hover { background: #fff; }
+        .comprovante-link { color: #3498db; text-decoration: none; font-size: 13px; }
     </style>
 </head>
 <body>
 
-<div class="card">
-    <div class="icon">🔓</div>
-    <h2>BEM-VINDO</h2>
-    <p>Clique abaixo para acessar o sistema de Ajuda Mútua.</p>
-    <button onclick="entrar()">ENTRAR NO SISTEMA</button>
+<div class="container">
+    <h1>Controle de Gestão - Ajuda Mútua</h1>
+    <div id="lista-usuarios">
+        <p style="text-align: center;">Carregando dados dos usuários...</p>
+    </div>
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
 <script>
-    function entrar() {
-        // Redireciona direto para o seu projeto principal
-        window.location.href = "https://galdinofidalgo10.github.io/ajuda-mutua/index.html";
+    // Suas configurações do projeto ajuda-mutua-7d99a
+    const firebaseConfig = {
+        apiKey: "AIzaSyCzTpvbMjGMTUIxMbZJjd_Kydas",
+        authDomain: "ajuda-mutua-7d99a.firebaseapp.com",
+        projectId: "ajuda-mutua-7d99a",
+        storageBucket: "ajuda-mutua-7d99a.appspot.com",
+        databaseURL: "https://ajuda-mutua-7d99a-default-rtdb.firebaseio.com/"
+    };
+
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
     }
+    const db = firebase.database();
+
+    // Função para buscar os dados que o Ajuda Mútua enviou
+    function carregarDados() {
+        const lista = document.getElementById('lista-usuarios');
+        
+        // Puxa da pasta 'solicitacoes' (ou o nome que você usa no seu index)
+        db.ref('solicitacoes').on('value', (snapshot) => {
+            lista.innerHTML = "";
+            if (!snapshot.exists()) {
+                lista.innerHTML = "<p style='text-align:center;'>Nenhum cadastro encontrado.</p>";
+                return;
+            }
+
+            snapshot.forEach((item) => {
+                const dados = item.val();
+                const id = item.key;
+
+                const html = `
+                    <div class="card-usuario">
+                        <div class="info">
+                            <p><b>Nome:</b> ${dados.nome}</p>
+                            <p><b>Chave Pix:</b> ${dados.chavePix}</p>
+                            <p><b>Data:</b> ${dados.dataSolicitacao}</p>
+                            <p><b>Status:</b> <span class="status-pendente">${dados.status}</span></p>
+                        </div>
+                        <button class="btn-liberar" onclick="liberar('${id}')">LIBERAR SALA</button>
+                    </div>
+                `;
+                lista.innerHTML += html;
+            });
+        });
+    }
+
+    function liberar(id) {
+        if(confirm("Deseja liberar este usuário agora?")) {
+            db.ref('solicitacoes/' + id).update({
+                status: "Liberado",
+                dataLiberacao: new Date().toLocaleString()
+            }).then(() => {
+                alert("Usuário liberado com sucesso!");
+            });
+        }
+    }
+
+    // Inicia a carga dos dados assim que abrir
+    carregarDados();
 </script>
 
 </body>
