@@ -2,111 +2,82 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Painel Admin | Protocolo Elite</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestão Elite | Admin</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         body { background: #020617; color: #f8fafc; font-family: 'Montserrat', sans-serif; }
-        .glass-card { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(10px); border: 1px solid rgba(212, 175, 55, 0.1); border-radius: 15px; }
+        .glass-card { background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(212, 175, 55, 0.1); border-radius: 15px; }
         .btn-gold { background: linear-gradient(135deg, #b8860b 0%, #fde047 100%); color: #000; font-weight: 900; }
         .status-pendente { border-left: 4px solid #fde047; }
-        .status-liberado { border-left: 4px solid #22c55e; opacity: 0.6; }
+        .status-liberado { border-left: 4px solid #22c55e; opacity: 0.7; }
     </style>
 </head>
 <body class="p-4">
     <div class="max-w-2xl mx-auto">
-        <header class="text-center mb-8 pt-4">
-            <h1 class="text-2xl font-black italic text-yellow-500 uppercase tracking-tighter">Gestão Elite</h1>
-            <p id="contador" class="text-[9px] font-bold text-slate-500 tracking-[0.4em] uppercase">Sincronizado com Firebase</p>
+        <header class="text-center mb-8">
+            <h1 class="text-2xl font-black italic text-yellow-500 uppercase">Gestão Elite</h1>
+            <p id="contador" class="text-[9px] font-bold text-slate-500 tracking-widest">Sincronizando...</p>
         </header>
 
-        <div id="lista-usuarios" class="space-y-4">
-            <p class="text-center text-slate-500 text-xs animate-pulse">Buscando solicitações no servidor...</p>
-        </div>
+        <div id="lista-usuarios" class="space-y-4"></div>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 
     <script>
-        // Use EXATAMENTE as configurações que estão no seu código do Ajuda Mútua
         const firebaseConfig = {
-            apiKey: "AIzaSyCZIP...", // Coloque a sua chave completa aqui
+            apiKey: "COLE_SUA_CHAVE_AQUI", 
             authDomain: "ajuda-mutua-7d99a.firebaseapp.com",
             databaseURL: "https://ajuda-mutua-7d99a-default-rtdb.firebaseio.com",
             projectId: "ajuda-mutua-7d99a",
             storageBucket: "ajuda-mutua-7d99a.appspot.com",
             appId: "1:1070775313117:web:fa90f5f0cb519ab38b1d34"
         };
-
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
+        firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
-        function monitorarSolicitacoes() {
+        database.ref('solicitacoes/').on('value', (snapshot) => {
             const container = document.getElementById('lista-usuarios');
-            const cont = document.getElementById('contador');
+            container.innerHTML = "";
+            let total = 0;
 
-            // Escuta a pasta 'solicitacoes/' em tempo real
-            database.ref('solicitacoes/').on('value', (snapshot) => {
-                container.innerHTML = "";
-                let total = 0;
+            snapshot.forEach((child) => {
+                total++;
+                const user = child.val();
+                const id = child.key;
+                const isLiberado = user.status === 'liberado';
 
-                if (!snapshot.exists()) {
-                    container.innerHTML = "<p class='text-center text-slate-600 py-10 text-xs'>NENHUMA ATIVAÇÃO PENDENTE.</p>";
-                    cont.innerText = "0 REGISTROS";
-                    return;
-                }
-
-                snapshot.forEach((child) => {
-                    total++;
-                    const user = child.val();
-                    const id = child.key;
-                    const isLiberado = user.status === 'liberado';
-                    const cardClass = isLiberado ? 'status-liberado' : 'status-pendente';
-
-                    container.innerHTML += `
-                        <div class="glass-card p-4 flex justify-between items-center shadow-2xl ${cardClass}">
-                            <div class="flex-1">
-                                <h3 class="font-black text-[11px] uppercase text-white">${user.nome}</h3>
-                                <p class="text-[10px] text-yellow-500 font-bold mt-1">PIX: ${user.pix}</p>
-                                <p class="text-[8px] text-slate-500 uppercase mt-1">${user.data || ''}</p>
-                            </div>
-                            
-                            <div class="flex gap-2 ml-4">
-                                ${!isLiberado ? `
-                                    <button onclick="liberar('${id}')" class="btn-gold px-3 py-2 rounded-lg text-[9px]">LIBERAR</button>
-                                ` : `
-                                    <span class="text-green-500 font-black text-[9px] px-2">OK</span>
-                                `}
-                                <button onclick="remover('${id}')" class="bg-red-900/50 text-red-500 border border-red-500/30 px-3 py-2 rounded-lg text-[9px] font-black">X</button>
-                            </div>
+                container.innerHTML += `
+                    <div class="glass-card p-4 flex justify-between items-center ${isLiberado ? 'status-liberado' : 'status-pendente'}">
+                        <div>
+                            <h3 class="font-black text-xs uppercase">${user.nome}</h3>
+                            <p class="text-[10px] text-yellow-500 font-bold">PIX: ${user.pix}</p>
+                            ${user.comprovantes ? `
+                                <button onclick="abrirFotos('${user.comprovantes.join('|')}')" class="mt-2 bg-blue-600 text-white text-[9px] px-2 py-1 rounded">👁️ VER FOTOS</button>
+                            ` : ''}
                         </div>
-                    `;
-                });
-                cont.innerText = total + " SOLICITAÇÕES NO TOTAL";
+                        <div class="flex gap-2">
+                            ${!isLiberado ? `<button onclick="liberar('${id}')" class="btn-gold px-3 py-2 rounded text-[9px]">LIBERAR</button>` : `<span class="text-green-500 text-[9px] font-bold">ATIVO</span>`}
+                            <button onclick="remover('${id}')" class="bg-red-600 text-white px-3 py-2 rounded text-[9px]">X</button>
+                        </div>
+                    </div>
+                `;
+            });
+            document.getElementById('contador').innerText = total + " REGISTROS";
+        });
+
+        function abrirFotos(lista) {
+            lista.split('|').forEach(img => {
+                const win = window.open();
+                win.document.write(`<body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center;"><img src="${img}" style="max-width:100%;border:4px solid #d4af37;"></body>`);
             });
         }
 
-        function liberar(id) {
-            if(confirm("Confirmar ativação deste usuário?")) {
-                database.ref('solicitacoes/' + id).update({
-                    status: 'liberado',
-                    liberado_em: new Date().toLocaleString('pt-BR')
-                });
-            }
-        }
-
-        function remover(id) {
-            if(confirm("Deseja apagar este registro permanentemente?")) {
-                database.ref('solicitacoes/' + id).remove();
-            }
-        }
-
-        // Inicia o monitoramento
-        monitorarSolicitacoes();
+        function liberar(id) { if(confirm("Liberar?")) database.ref('solicitacoes/'+id).update({status:'liberado'}); }
+        function remover(id) { if(confirm("Apagar?")) database.ref('solicitacoes/'+id).remove(); }
     </script>
 </body>
 </html>
