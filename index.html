@@ -6,20 +6,23 @@
     <title>Acesso Master</title>
     <style>
         body { font-family: sans-serif; background-color: #000; color: #fff; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .card { border: 2px solid #d4af37; padding: 30px; border-radius: 15px; width: 300px; text-align: center; background: #0a0a0a; box-shadow: 0 0 15px rgba(212, 175, 55, 0.3); }
-        h2 { color: #d4af37; margin-bottom: 20px; text-transform: uppercase; }
-        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 5px; border: 1px solid #333; background: #1a1a1a; color: #fff; box-sizing: border-box; }
-        button { width: 100%; padding: 12px; background-color: #d4af37; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; margin-top: 10px; color: #000; }
-        #msg { font-size: 13px; margin-top: 15px; min-height: 20px; font-weight: bold; }
+        .card { border: 2px solid #d4af37; padding: 40px; border-radius: 20px; width: 320px; text-align: center; background: #0a0a0a; box-shadow: 0 0 20px rgba(212, 175, 55, 0.4); }
+        h2 { color: #d4af37; margin-bottom: 25px; text-transform: uppercase; letter-spacing: 2px; }
+        .icon { font-size: 40px; margin-bottom: 10px; }
+        input { width: 100%; padding: 15px; margin: 15px 0; border-radius: 10px; border: 1px solid #333; background: #1a1a1a; color: #fff; box-sizing: border-box; text-align: center; font-size: 16px; }
+        input:focus { border-color: #d4af37; outline: none; }
+        button { width: 100%; padding: 15px; background-color: #d4af37; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; color: #000; font-size: 16px; transition: 0.3s; }
+        button:hover { background-color: #f1c40f; transform: scale(1.05); }
+        #msg { font-size: 14px; margin-top: 20px; min-height: 20px; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h2>ACESSO MASTER</h2>
-    <input type="email" id="email" placeholder="Seu e-mail" required>
-    <input type="password" id="password" placeholder="Sua senha" required>
-    <button onclick="cadastrar()">CADASTRAR MEU ACESSO</button>
+    <div class="icon">🔒</div>
+    <h2>SISTEMA PRIVADO</h2>
+    <input type="password" id="accessKey" placeholder="Chave de Acesso 🔑" required>
+    <button onclick="liberarAcesso()">ENTRAR</button>
     <div id="msg"></div>
 </div>
 
@@ -27,7 +30,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
 
 <script>
-    // Configurações REAIS extraídas do seu último print (ajuda-mutua-7d99a)
+    // Configurações do seu projeto ajuda-mutua-7d99a
     const firebaseConfig = {
         apiKey: "AIzaSyCzTpvbMjGMTUIxMbZJjd_Kydas", 
         authDomain: "ajuda-mutua-7d99a.firebaseapp.com",
@@ -40,34 +43,49 @@
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
 
-    function cadastrar() {
-        const emailField = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
-        const msg = document.getElementById('msg');
-        const email = emailField.trim();
+    // DEFINA A SUA SENHA AQUI:
+    const SENHA_MESTRA = "102030"; 
 
-        if (!email || !password) {
+    function liberarAcesso() {
+        const key = document.getElementById('accessKey').value.trim();
+        const msg = document.getElementById('msg');
+
+        if (!key) {
             msg.style.color = "#ffeb3b";
-            msg.innerText = "Preencha todos os campos!";
+            msg.innerText = "Digite a chave!";
+            return;
+        }
+
+        // TRAVA DE SEGURANÇA: Só passa se a senha for a que você definiu
+        if (key !== SENHA_MESTRA) {
+            msg.style.color = "#ff4444";
+            msg.innerText = "ACESSO NEGADO: Chave Incorreta!";
             return;
         }
 
         msg.style.color = "#aaa";
-        msg.innerText = "Processando...";
+        msg.innerText = "Autenticando...";
 
-        auth.createUserWithEmailAndPassword(email, password)
+        // Se a senha estiver certa, ele loga no Firebase para garantir a sessão
+        const fakeEmail = key + "@acesso.com";
+
+        auth.signInWithEmailAndPassword(fakeEmail, key)
             .then(() => {
                 msg.style.color = "#00ff00";
-                msg.innerText = "Acesso criado com sucesso!";
+                msg.innerText = "ACESSO LIBERADO! 🔓";
+                // window.location.href = "sua_pagina_privada.html";
             })
             .catch((error) => {
-                msg.style.color = "#ff4444";
-                if (error.code === 'auth/invalid-email') {
-                    msg.innerText = "E-mail inválido.";
-                } else if (error.code === 'auth/email-already-in-use') {
-                    msg.innerText = "E-mail já está em uso.";
+                // Se o usuário não existir no Firebase ainda, ele cria
+                if (error.code === 'auth/user-not-found') {
+                    auth.createUserWithEmailAndPassword(fakeEmail, key)
+                        .then(() => {
+                            msg.style.color = "#00ff00";
+                            msg.innerText = "ACESSO LIBERADO! 🔓";
+                        });
                 } else {
-                    msg.innerText = "Erro: " + error.message;
+                    msg.style.color = "#ff4444";
+                    msg.innerText = "Erro no servidor. Tente novamente.";
                 }
             });
     }
