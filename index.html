@@ -12,17 +12,16 @@
         .btn-gold { background: linear-gradient(135deg, #b8860b 0%, #fde047 100%); color: #000; font-weight: 900; }
         .status-pendente { border-left: 4px solid #fde047; }
         .status-liberado { border-left: 4px solid #22c55e; opacity: 0.7; }
-        .thumb-comprovante { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; border: 1px solid rgba(212, 175, 55, 0.3); cursor: pointer; }
+        .thumb { width: 65px; height: 65px; object-fit: cover; border-radius: 8px; border: 1px solid #fde047; cursor: pointer; }
     </style>
 </head>
 <body class="p-4">
     <div class="max-w-2xl mx-auto">
         <header class="text-center mb-6 pt-4">
-            <h1 class="text-2xl font-black italic text-yellow-500 uppercase">Gestão Elite</h1>
-            <p id="contador" class="text-[9px] font-bold text-slate-500 tracking-widest uppercase italic">Sincronizando banco de dados...</p>
+            <h1 class="text-2xl font-black italic text-yellow-500 uppercase tracking-tighter text-shadow">Gestão Elite</h1>
+            <p id="contador" class="text-[9px] font-bold text-slate-500 tracking-widest uppercase italic">Conectando ao Firebase...</p>
         </header>
-
-        <div id="lista-usuarios" class="space-y-4"></div>
+        <div id="lista" class="space-y-4"></div>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
@@ -40,55 +39,40 @@
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
-        database.ref('solicitacoes/').on('value', (snapshot) => {
-            const container = document.getElementById('lista-usuarios');
-            container.innerHTML = "";
-            let total = 0;
-
-            snapshot.forEach((child) => {
-                total++;
-                const user = child.val();
+        database.ref('solicitacoes/').on('value', (snap) => {
+            const list = document.getElementById('lista');
+            list.innerHTML = "";
+            let count = 0;
+            snap.forEach((child) => {
+                count++;
+                const u = child.val();
                 const id = child.key;
-                const isLiberado = user.status === 'liberado';
+                const isLib = u.status === 'liberado';
+                let fHtml = "";
+                if(u.comprovantes) u.comprovantes.forEach(img => { fHtml += `<img src="${img}" class="thumb" onclick="openFull('${img}')">`; });
 
-                // Criar o HTML das 3 fotos
-                let fotosHtml = "";
-                if (user.comprovantes && Array.isArray(user.comprovantes)) {
-                    user.comprovantes.forEach((img) => {
-                        fotosHtml += `<img src="${img}" class="thumb-comprovante" onclick="verGrande('${img}')">`;
-                    });
-                }
-
-                container.innerHTML += `
-                    <div class="glass-card p-4 ${isLiberado ? 'status-liberado' : 'status-pendente'}">
-                        <div class="flex justify-between items-start mb-3">
+                list.innerHTML += `
+                    <div class="glass-card p-4 ${isLib ? 'status-liberado' : 'status-pendente'}">
+                        <div class="flex justify-between items-start mb-4">
                             <div>
-                                <h3 class="font-black text-[12px] uppercase text-white">${user.nome}</h3>
-                                <p class="text-[10px] text-yellow-500 font-bold">PIX: ${user.pix}</p>
-                                <p class="text-[8px] text-slate-400 italic">${user.data}</p>
+                                <h3 class="font-black text-xs uppercase text-white">${u.nome}</h3>
+                                <p class="text-[10px] text-yellow-500 font-bold">PIX: ${u.pix}</p>
+                                <p class="text-[8px] text-slate-400 mt-1">Indicado por: ${u.indicado_por || 'Direto'}</p>
                             </div>
                             <div class="flex gap-2">
-                                ${!isLiberado ? `<button onclick="liberar('${id}')" class="btn-gold px-3 py-2 rounded text-[9px]">LIBERAR</button>` : `<span class="text-green-500 font-bold text-[9px]">ATIVO</span>`}
-                                <button onclick="remover('${id}')" class="bg-red-600/20 text-red-500 border border-red-500/20 px-3 py-2 rounded text-[9px]">X</button>
+                                ${!isLib ? `<button onclick="liber('${id}')" class="btn-gold px-3 py-2 rounded text-[9px]">LIBERAR</button>` : `<span class="text-green-500 font-bold text-[9px]">ATIVO</span>`}
+                                <button onclick="del('${id}')" class="bg-red-600/30 text-red-500 border border-red-500/20 px-3 py-2 rounded text-[9px]">X</button>
                             </div>
                         </div>
-                        <div class="flex gap-2 mt-2 bg-black/30 p-2 rounded-lg">
-                            ${fotosHtml || '<span class="text-[8px] text-red-500 italic">Sem comprovantes</span>'}
-                        </div>
-                        <p class="text-[7px] text-slate-500 mt-2 italic text-right">Toque na imagem para ampliar</p>
-                    </div>
-                `;
+                        <div class="flex gap-2 bg-black/40 p-2 rounded-lg justify-center">${fHtml}</div>
+                    </div>`;
             });
-            document.getElementById('contador').innerText = total + " REGISTROS ENCONTRADOS";
+            document.getElementById('contador').innerText = count + " SOLICITAÇÕES";
         });
 
-        function verGrande(img) {
-            const win = window.open();
-            win.document.write(`<body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center;height:100vh;"><img src="${img}" style="max-width:100%;max-height:100%;border:2px solid #fde047;"></body>`);
-        }
-
-        function liberar(id) { if(confirm("Confirmar ativação deste usuário?")) database.ref('solicitacoes/'+id).update({status:'liberado'}); }
-        function remover(id) { if(confirm("Deseja apagar este registro permanentemente?")) database.ref('solicitacoes/'+id).remove(); }
+        function openFull(i) { const w = window.open(); w.document.write(`<body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center;height:100vh;"><img src="${i}" style="max-width:100%;max-height:100%;border:2px solid #fde047;"></body>`); }
+        function liber(id) { if(confirm("Liberar usuário?")) database.ref('solicitacoes/'+id).update({status:'liberado'}); }
+        function del(id) { if(confirm("Apagar?")) database.ref('solicitacoes/'+id).remove(); }
     </script>
 </body>
 </html>
