@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADM | Painel de Gestão Elite</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { background: #020617; color: #f8fafc; font-family: 'Montserrat', sans-serif; }
+        .glass-card { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(10px); border: 1px solid rgba(212, 175, 55, 0.1); border-radius: 15px; }
+        .gold-border { border-left: 4px solid #d4af37; }
+        #toast { visibility: hidden; min-width: 280px; background: #d4af37; color: #000; text-align: center; border-radius: 50px; padding: 15px; position: fixed; z-index: 9999; left: 50%; top: 30px; transform: translateX(-50%); font-weight: 900; }
+        #toast.show { visibility: visible; animation: slideDown 0.5s; }
+        @keyframes slideDown { from { top: -100px; } to { top: 30px; } }
+    </style>
+</head>
+<body class="p-6">
+    <div id="toast">Notificação</div>
+
+    <div class="max-w-3xl mx-auto">
+        <header class="mb-10 flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-black text-yellow-500 italic uppercase">Gestão de Líderes</h1>
+                <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Protocolo Elite | Privado</p>
+            </div>
+            <div id="count" class="bg-yellow-500 text-black text-[10px] font-black px-4 py-2 rounded-full">0 PENDENTES</div>
+        </header>
+
+        <div id="lista-pendentes" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCZIP...", // Use a sua chave completa do print anterior
+            authDomain: "ajuda-mutua-7d99a.firebaseapp.com",
+            databaseURL: "https://ajuda-mutua-7d99a-default-rtdb.firebaseio.com",
+            projectId: "ajuda-mutua-7d99a",
+            storageBucket: "ajuda-mutua-7d99a.appspot.com",
+            messagingSenderId: "1070775313117",
+            appId: "1:1070775313117:web:fa90f5f0cb519ab38b1d34"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        function showT(m) { const t = document.getElementById("toast"); t.innerText = m; t.className = "show"; setTimeout(() => t.className = "", 3000); }
+
+        database.ref('solicitacoes/').on('value', (snapshot) => {
+            const container = document.getElementById('lista-pendentes');
+            const counter = document.getElementById('count');
+            container.innerHTML = "";
+            const data = snapshot.val();
+            let total = 0;
+
+            if (data) {
+                for (let id in data) {
+                    total++;
+                    const u = data[id];
+                    container.innerHTML += `
+                        <div class="glass-card p-6 gold-border shadow-2xl">
+                            <div class="mb-4">
+                                <h3 class="font-black text-white text-sm uppercase">${u.nome}</h3>
+                                <p class="text-[10px] text-slate-400">PIX: ${u.pix}</p>
+                                <p class="text-[8px] text-slate-700 mt-2 italic">${u.data}</p>
+                            </div>
+                            <div class="flex gap-2">
+                                <button onclick="ativar('${id}')" class="flex-1 bg-green-600 text-white text-[10px] font-black py-3 rounded-lg">ATIVAR</button>
+                                <button onclick="remover('${id}')" class="flex-1 bg-red-900/50 text-white text-[10px] font-black py-3 rounded-lg">DESCARTAR</button>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+            counter.innerText = total + " PENDENTES";
+        });
+
+        function ativar(id) {
+            if(confirm("Deseja confirmar o pagamento e ativar?")) {
+                database.ref('solicitacoes/' + id).remove();
+                showT("LÍDER ATIVADO!");
+            }
+        }
+
+        function remover(id) {
+            if(confirm("Apagar solicitação?")) {
+                database.ref('solicitacoes/' + id).remove();
+                showT("REMOVIDO.");
+            }
+        }
+    </script>
+</body>
+</html>
