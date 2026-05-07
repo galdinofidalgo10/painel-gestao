@@ -27,17 +27,16 @@
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
 
 <script>
-    // Configurações REAIS do seu projeto (Recuperadas do seu print anterior)
+    // Configurações REAIS extraídas do seu último print (ajuda-mutua-7d99a)
     const firebaseConfig = {
-        apiKey: "AIzaSyAs7C6vFq_N_88v4G7_W4Z8L9X0Y1Z2A3B", 
-        authDomain: "galdinofidalgo10.firebaseapp.com",
-        projectId: "galdinofidalgo10",
-        storageBucket: "galdinofidalgo10.appspot.com",
-        messagingSenderId: "1056589339345",
-        appId: "1:1056589339345:web:04d6e90f230239634d6e90"
+        apiKey: "AIzaSyCzTpvbMjGMTUIxMbZJjd_Kydas", 
+        authDomain: "ajuda-mutua-7d99a.firebaseapp.com",
+        projectId: "ajuda-mutua-7d99a",
+        storageBucket: "ajuda-mutua-7d99a.appspot.com",
+        messagingSenderId: "1070775313117",
+        appId: "1:1070775313117:web:fe8895ff8cb5110cb51f34"
     };
 
-    // Inicializa o Firebase
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
 
@@ -45,34 +44,28 @@
         const emailField = document.getElementById('email').value;
         const password = document.getElementById('password').value;
         const msg = document.getElementById('msg');
-
-        // Limpa espaços vazios para evitar o erro de 'badly formatted email'
         const email = emailField.trim();
 
         if (!email || !password) {
             msg.style.color = "#ffeb3b";
-            msg.innerText = "Preencha e-mail e senha!";
+            msg.innerText = "Preencha todos os campos!";
             return;
         }
 
         msg.style.color = "#aaa";
-        msg.innerText = "Conectando ao servidor...";
+        msg.innerText = "Processando...";
 
         auth.createUserWithEmailAndPassword(email, password)
-            .then((userCredential) => {
+            .then(() => {
                 msg.style.color = "#00ff00";
                 msg.innerText = "Acesso criado com sucesso!";
-                console.log("Sucesso! UID:", userCredential.user.uid);
             })
             .catch((error) => {
                 msg.style.color = "#ff4444";
-                // Tradução dos erros comuns
                 if (error.code === 'auth/invalid-email') {
                     msg.innerText = "E-mail inválido.";
                 } else if (error.code === 'auth/email-already-in-use') {
                     msg.innerText = "E-mail já está em uso.";
-                } else if (error.code === 'auth/api-key-not-valid') {
-                    msg.innerText = "Chave de API inválida no Firebase.";
                 } else {
                     msg.innerText = "Erro: " + error.message;
                 }
