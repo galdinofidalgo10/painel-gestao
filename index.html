@@ -11,22 +11,21 @@
         .glass-card { background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(212, 175, 55, 0.1); border-radius: 15px; }
         .btn-gold { background: linear-gradient(135deg, #b8860b 0%, #fde047 100%); color: #000; font-weight: 900; }
         .status-pendente { border-left: 4px solid #fde047; }
-        .status-liberado { border-left: 4px solid #22c55e; opacity: 0.7; }
-        .thumb { width: 65px; height: 65px; object-fit: cover; border-radius: 8px; border: 1px solid #fde047; cursor: pointer; }
+        .status-liberado { border-left: 4px solid #22c55e; opacity: 0.8; }
+        .thumb { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; border: 1px solid #fde047; }
     </style>
 </head>
 <body class="p-4">
     <div class="max-w-2xl mx-auto">
         <header class="text-center mb-6 pt-4">
-            <h1 class="text-2xl font-black italic text-yellow-500 uppercase tracking-tighter text-shadow">Gestão Elite</h1>
-            <p id="contador" class="text-[9px] font-bold text-slate-500 tracking-widest uppercase italic">Conectando ao Firebase...</p>
+            <h1 class="text-2xl font-black italic text-yellow-500 uppercase tracking-tighter">Gestão Elite</h1>
+            <p id="contador" class="text-[9px] font-bold text-slate-500 tracking-widest uppercase italic">Sincronizando...</p>
         </header>
         <div id="lista" class="space-y-4"></div>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
-
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyCZIP0M0M8FqC_LAtI9I36e_IIn_V-C4m4",
@@ -51,27 +50,32 @@
                 let fHtml = "";
                 if(u.comprovantes) u.comprovantes.forEach(img => { fHtml += `<img src="${img}" class="thumb" onclick="openFull('${img}')">`; });
 
+                // Link do WhatsApp com mensagem automática
+                const siteUrl = window.location.href.split('gestao.html')[0] + "membro.html";
+                const msg = window.encodeURIComponent(`Olá ${u.nome}! Seu cadastro no Protocolo Elite foi aprovado. Acesse agora sua Área de Líder para gerar seu link: ${siteUrl}`);
+                const zapLink = `https://api.whatsapp.com/send?phone=55${u.whatsapp}&text=${msg}`;
+
                 list.innerHTML += `
                     <div class="glass-card p-4 ${isLib ? 'status-liberado' : 'status-pendente'}">
-                        <div class="flex justify-between items-start mb-4">
+                        <div class="flex justify-between items-start mb-3 text-white">
                             <div>
-                                <h3 class="font-black text-xs uppercase text-white">${u.nome}</h3>
-                                <p class="text-[10px] text-yellow-500 font-bold">PIX: ${u.pix}</p>
-                                <p class="text-[8px] text-slate-400 mt-1">Indicado por: ${u.indicado_por || 'Direto'}</p>
+                                <h3 class="font-black text-xs uppercase">${u.nome}</h3>
+                                <p class="text-[9px] text-yellow-500 font-bold">PIX: ${u.pix} | ZAP: ${u.whatsapp}</p>
+                                <p class="text-[7px] text-slate-500 italic mt-1 text-white">Indicado por: ${u.indicado_por || 'Direto'}</p>
                             </div>
-                            <div class="flex gap-2">
-                                ${!isLib ? `<button onclick="liber('${id}')" class="btn-gold px-3 py-2 rounded text-[9px]">LIBERAR</button>` : `<span class="text-green-500 font-bold text-[9px]">ATIVO</span>`}
-                                <button onclick="del('${id}')" class="bg-red-600/30 text-red-500 border border-red-500/20 px-3 py-2 rounded text-[9px]">X</button>
+                            <div class="flex gap-1">
+                                ${!isLib ? `<button onclick="liber('${id}')" class="btn-gold px-2 py-1.5 rounded text-[8px]">LIBERAR</button>` : `<a href="${zapLink}" target="_blank" class="bg-green-600 text-white px-2 py-1.5 rounded text-[8px] font-bold">ENVIAR ACESSO</a>`}
+                                <button onclick="del('${id}')" class="bg-red-600/20 text-red-500 px-2 py-1.5 rounded text-[8px]">X</button>
                             </div>
                         </div>
-                        <div class="flex gap-2 bg-black/40 p-2 rounded-lg justify-center">${fHtml}</div>
+                        <div class="flex gap-2 bg-black/40 p-2 rounded-lg overflow-x-auto justify-center">${fHtml}</div>
                     </div>`;
             });
             document.getElementById('contador').innerText = count + " SOLICITAÇÕES";
         });
 
         function openFull(i) { const w = window.open(); w.document.write(`<body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center;height:100vh;"><img src="${i}" style="max-width:100%;max-height:100%;border:2px solid #fde047;"></body>`); }
-        function liber(id) { if(confirm("Liberar usuário?")) database.ref('solicitacoes/'+id).update({status:'liberado'}); }
+        function liber(id) { if(confirm("Aprovar usuário?")) database.ref('solicitacoes/'+id).update({status:'liberado'}); }
         function del(id) { if(confirm("Apagar?")) database.ref('solicitacoes/'+id).remove(); }
     </script>
 </body>
