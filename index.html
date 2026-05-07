@@ -2,201 +2,111 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel de Gestão - Admin</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Painel Admin | Protocolo Elite</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --gold: #d4af37;
-            --dark: #0a0a0a;
-            --card-bg: #151515;
-            --text: #ffffff;
-        }
-
-        body {
-            font-family: 'Segoe UI', Roboto, sans-serif;
-            background-color: var(--dark);
-            color: var(--text);
-            margin: 0;
-            padding: 10px;
-        }
-
-        .container {
-            max-width: 1100px;
-            margin: 0 auto;
-        }
-
-        header {
-            text-align: center;
-            padding: 20px 0;
-            border-bottom: 2px solid var(--gold);
-            margin-bottom: 20px;
-        }
-
-        header h1 {
-            color: var(--gold);
-            margin: 0;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            font-size: 1.5rem;
-        }
-
-        /* Grade Responsiva */
-        .grid-usuarios {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 15px;
-        }
-
-        .card {
-            background: var(--card-bg);
-            border: 1px solid #333;
-            border-radius: 12px;
-            padding: 15px;
-            transition: 0.3s;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .card:hover {
-            border-color: var(--gold);
-            box-shadow: 0 5px 15px rgba(212, 175, 55, 0.2);
-        }
-
-        .card b { color: var(--gold); }
-
-        .info p {
-            margin: 8px 0;
-            font-size: 0.95rem;
-            word-break: break-all;
-        }
-
-        .status-badge {
-            display: inline-block;
-            padding: 4px 8px;
-            border-radius: 5px;
-            font-size: 0.8rem;
-            font-weight: bold;
-            background: #333;
-        }
-
-        .pendente { color: #ffeb3b; border: 1px solid #ffeb3b; }
-        .liberado { color: #00ff00; border: 1px solid #00ff00; }
-
-        .btn-acoes {
-            margin-top: 15px;
-            display: flex;
-            gap: 10px;
-        }
-
-        button {
-            flex: 1;
-            padding: 10px;
-            border: none;
-            border-radius: 6px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-
-        .btn-liberar { background-color: var(--gold); color: #000; }
-        .btn-liberar:hover { background-color: #fff; }
-
-        .btn-excluir { background-color: #ff4444; color: #fff; }
-
-        /* Estilo para celular */
-        @media (max-width: 480px) {
-            header h1 { font-size: 1.2rem; }
-            .grid-usuarios { grid-template-columns: 1fr; }
-        }
+        body { background: #020617; color: #f8fafc; font-family: 'Montserrat', sans-serif; }
+        .glass-card { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(10px); border: 1px solid rgba(212, 175, 55, 0.1); border-radius: 15px; }
+        .btn-gold { background: linear-gradient(135deg, #b8860b 0%, #fde047 100%); color: #000; font-weight: 900; }
+        .status-pendente { border-left: 4px solid #fde047; }
+        .status-liberado { border-left: 4px solid #22c55e; opacity: 0.6; }
     </style>
 </head>
-<body>
+<body class="p-4">
+    <div class="max-w-2xl mx-auto">
+        <header class="text-center mb-8 pt-4">
+            <h1 class="text-2xl font-black italic text-yellow-500 uppercase tracking-tighter">Gestão Elite</h1>
+            <p id="contador" class="text-[9px] font-bold text-slate-500 tracking-[0.4em] uppercase">Sincronizado com Firebase</p>
+        </header>
 
-<div class="container">
-    <header>
-        <h1>Gestão Ajuda Mútua</h1>
-        <p id="contador" style="font-size: 0.8rem; color: #888;">Carregando registros...</p>
-    </header>
-
-    <div id="lista-usuarios" class="grid-usuarios">
+        <div id="lista-usuarios" class="space-y-4">
+            <p class="text-center text-slate-500 text-xs animate-pulse">Buscando solicitações no servidor...</p>
         </div>
-</div>
+    </div>
 
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 
-<script>
-    // IMPORTANTE: Use sua apiKey atualizada aqui
-    const firebaseConfig = {
-        apiKey: "AIzaSyCzTpvbMjGMTUIxMbZJjd_Kydas", 
-        authDomain: "ajuda-mutua-7d99a.firebaseapp.com",
-        projectId: "ajuda-mutua-7d99a",
-        storageBucket: "ajuda-mutua-7d99a.appspot.com",
-        databaseURL: "https://ajuda-mutua-7d99a-default-rtdb.firebaseio.com/"
-    };
+    <script>
+        // Use EXATAMENTE as configurações que estão no seu código do Ajuda Mútua
+        const firebaseConfig = {
+            apiKey: "AIzaSyCZIP...", // Coloque a sua chave completa aqui
+            authDomain: "ajuda-mutua-7d99a.firebaseapp.com",
+            databaseURL: "https://ajuda-mutua-7d99a-default-rtdb.firebaseio.com",
+            projectId: "ajuda-mutua-7d99a",
+            storageBucket: "ajuda-mutua-7d99a.appspot.com",
+            appId: "1:1070775313117:web:fa90f5f0cb519ab38b1d34"
+        };
 
-    if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
-    }
-    const db = firebase.database();
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const database = firebase.database();
 
-    function carregarPainel() {
-        const lista = document.getElementById('lista-usuarios');
-        const contador = document.getElementById('contador');
+        function monitorarSolicitacoes() {
+            const container = document.getElementById('lista-usuarios');
+            const cont = document.getElementById('contador');
 
-        // Escuta a pasta 'solicitacoes' em tempo real
-        db.ref('solicitacoes').on('value', (snapshot) => {
-            lista.innerHTML = "";
-            let total = 0;
+            // Escuta a pasta 'solicitacoes/' em tempo real
+            database.ref('solicitacoes/').on('value', (snapshot) => {
+                container.innerHTML = "";
+                let total = 0;
 
-            if (!snapshot.exists()) {
-                lista.innerHTML = "<p style='text-align:center; grid-column: 1/-1;'>Nenhum dado encontrado.</p>";
-                contador.innerText = "0 registros";
-                return;
+                if (!snapshot.exists()) {
+                    container.innerHTML = "<p class='text-center text-slate-600 py-10 text-xs'>NENHUMA ATIVAÇÃO PENDENTE.</p>";
+                    cont.innerText = "0 REGISTROS";
+                    return;
+                }
+
+                snapshot.forEach((child) => {
+                    total++;
+                    const user = child.val();
+                    const id = child.key;
+                    const isLiberado = user.status === 'liberado';
+                    const cardClass = isLiberado ? 'status-liberado' : 'status-pendente';
+
+                    container.innerHTML += `
+                        <div class="glass-card p-4 flex justify-between items-center shadow-2xl ${cardClass}">
+                            <div class="flex-1">
+                                <h3 class="font-black text-[11px] uppercase text-white">${user.nome}</h3>
+                                <p class="text-[10px] text-yellow-500 font-bold mt-1">PIX: ${user.pix}</p>
+                                <p class="text-[8px] text-slate-500 uppercase mt-1">${user.data || ''}</p>
+                            </div>
+                            
+                            <div class="flex gap-2 ml-4">
+                                ${!isLiberado ? `
+                                    <button onclick="liberar('${id}')" class="btn-gold px-3 py-2 rounded-lg text-[9px]">LIBERAR</button>
+                                ` : `
+                                    <span class="text-green-500 font-black text-[9px] px-2">OK</span>
+                                `}
+                                <button onclick="remover('${id}')" class="bg-red-900/50 text-red-500 border border-red-500/30 px-3 py-2 rounded-lg text-[9px] font-black">X</button>
+                            </div>
+                        </div>
+                    `;
+                });
+                cont.innerText = total + " SOLICITAÇÕES NO TOTAL";
+            });
+        }
+
+        function liberar(id) {
+            if(confirm("Confirmar ativação deste usuário?")) {
+                database.ref('solicitacoes/' + id).update({
+                    status: 'liberado',
+                    liberado_em: new Date().toLocaleString('pt-BR')
+                });
             }
-
-            snapshot.forEach((item) => {
-                total++;
-                const d = item.val();
-                const id = item.key;
-                const statusClass = d.status === 'Liberado' ? 'liberado' : 'pendente';
-
-                lista.innerHTML += `
-                    <div class="card">
-                        <div class="info">
-                            <p><b>Nome:</b> ${d.nome}</p>
-                            <p><b>Pix:</b> ${d.chavePix}</p>
-                            <p><b>Data:</b> ${d.dataSolicitacao || '--'}</p>
-                            <p><b>Status:</b> <span class="status-badge ${statusClass}">${d.status || 'Pendente'}</span></p>
-                        </div>
-                        <div class="btn-acoes">
-                            <button class="btn-liberar" onclick="liberar('${id}')">LIBERAR</button>
-                            <button class="btn-excluir" onclick="excluir('${id}')">X</button>
-                        </div>
-                    </div>
-                `;
-            });
-            contador.innerText = total + " usuários cadastrados";
-        });
-    }
-
-    function liberar(id) {
-        if(confirm("Liberar acesso desse usuário?")) {
-            db.ref('solicitacoes/' + id).update({
-                status: "Liberado",
-                horaLiberacao: new Date().toLocaleString()
-            });
         }
-    }
 
-    function excluir(id) {
-        if(confirm("Deseja apagar este registro permanentemente?")) {
-            db.ref('solicitacoes/' + id).remove();
+        function remover(id) {
+            if(confirm("Deseja apagar este registro permanentemente?")) {
+                database.ref('solicitacoes/' + id).remove();
+            }
         }
-    }
 
-    carregarPainel();
-</script>
-
+        // Inicia o monitoramento
+        monitorarSolicitacoes();
+    </script>
 </body>
 </html>
