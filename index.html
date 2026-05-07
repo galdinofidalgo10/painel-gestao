@@ -2,95 +2,69 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel de Gestão Administrativa</title>
+    <title>Gestão Administrativa</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #050505; color: #fff; margin: 0; padding: 20px; }
-        h1 { color: #d4af37; text-align: center; border-bottom: 2px solid #d4af37; padding-bottom: 10px; text-transform: uppercase; }
-        .container { max-width: 1000px; margin: auto; }
-        .card-usuario { background: #111; border: 1px solid #333; border-radius: 10px; padding: 20px; margin-bottom: 20px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
-        .info { flex: 1; min-width: 250px; }
-        .info p { margin: 5px 0; font-size: 14px; }
-        .info b { color: #d4af37; }
-        .status-pendente { color: #ffeb3b; font-weight: bold; }
-        .btn-liberar { background: #d4af37; color: #000; border: none; padding: 10px 20px; border-radius: 5px; font-weight: bold; cursor: pointer; transition: 0.3s; }
-        .btn-liberar:hover { background: #fff; }
-        .comprovante-link { color: #3498db; text-decoration: none; font-size: 13px; }
+        body { background-color: #000; color: #fff; font-family: sans-serif; padding: 20px; }
+        h1 { color: #d4af37; text-align: center; text-transform: uppercase; border-bottom: 2px solid #d4af37; padding-bottom: 10px; }
+        .usuario-card { background: #111; border: 1px solid #333; padding: 15px; margin-bottom: 10px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .btn-acao { background: #d4af37; color: #000; border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        b { color: #d4af37; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>Controle de Gestão - Ajuda Mútua</h1>
-    <div id="lista-usuarios">
-        <p style="text-align: center;">Carregando dados dos usuários...</p>
-    </div>
-</div>
+    <h1>Painel de Controlo - Gestão</h1>
+    <div id="dados-firebase">A carregar registos...</div>
 
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
-<script>
-    // Suas configurações do projeto ajuda-mutua-7d99a
-    const firebaseConfig = {
-        apiKey: "AIzaSyCzTpvbMjGMTUIxMbZJjd_Kydas",
-        authDomain: "ajuda-mutua-7d99a.firebaseapp.com",
-        projectId: "ajuda-mutua-7d99a",
-        storageBucket: "ajuda-mutua-7d99a.appspot.com",
-        databaseURL: "https://ajuda-mutua-7d99a-default-rtdb.firebaseio.com/"
-    };
+    <script>
+        // Use a chave que aparece no seu console do Firebase agora
+        const firebaseConfig = {
+            apiKey: "AIzaSyCzTpvbMjGMTUIxMbZJjd_Kydas", // Verifique se esta chave foi atualizada no painel
+            authDomain: "ajuda-mutua-7d99a.firebaseapp.com",
+            projectId: "ajuda-mutua-7d99a",
+            storageBucket: "ajuda-mutua-7d99a.appspot.com",
+            databaseURL: "https://ajuda-mutua-7d99a-default-rtdb.firebaseio.com/"
+        };
 
-    if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
-    }
-    const db = firebase.database();
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
 
-    // Função para buscar os dados que o Ajuda Mútua enviou
-    function carregarDados() {
-        const lista = document.getElementById('lista-usuarios');
-        
-        // Puxa da pasta 'solicitacoes' (ou o nome que você usa no seu index)
+        const db = firebase.database();
+
+        // Esta função lê a pasta onde o seu index.html guarda os dados
         db.ref('solicitacoes').on('value', (snapshot) => {
-            lista.innerHTML = "";
+            const container = document.getElementById('dados-firebase');
+            container.innerHTML = "";
+
             if (!snapshot.exists()) {
-                lista.innerHTML = "<p style='text-align:center;'>Nenhum cadastro encontrado.</p>";
+                container.innerHTML = "Nenhum registo encontrado.";
                 return;
             }
 
-            snapshot.forEach((item) => {
-                const dados = item.val();
-                const id = item.key;
-
-                const html = `
-                    <div class="card-usuario">
-                        <div class="info">
-                            <p><b>Nome:</b> ${dados.nome}</p>
-                            <p><b>Chave Pix:</b> ${dados.chavePix}</p>
-                            <p><b>Data:</b> ${dados.dataSolicitacao}</p>
-                            <p><b>Status:</b> <span class="status-pendente">${dados.status}</span></p>
+            snapshot.forEach((child) => {
+                const user = child.val();
+                container.innerHTML += `
+                    <div class="usuario-card">
+                        <div>
+                            <p><b>Nome:</b> ${user.nome}</p>
+                            <p><b>Pix:</b> ${user.chavePix}</p>
                         </div>
-                        <button class="btn-liberar" onclick="liberar('${id}')">LIBERAR SALA</button>
+                        <button class="btn-acao" onclick="liberar('${child.key}')">LIBERAR SALA</button>
                     </div>
                 `;
-                lista.innerHTML += html;
             });
         });
-    }
 
-    function liberar(id) {
-        if(confirm("Deseja liberar este usuário agora?")) {
-            db.ref('solicitacoes/' + id).update({
-                status: "Liberado",
-                dataLiberacao: new Date().toLocaleString()
-            }).then(() => {
-                alert("Usuário liberado com sucesso!");
-            });
+        function liberar(id) {
+            if(confirm("Confirmar libertação do utilizador?")) {
+                db.ref('solicitacoes/' + id).update({ status: "Liberado" });
+                alert("Utilizador atualizado!");
+            }
         }
-    }
-
-    // Inicia a carga dos dados assim que abrir
-    carregarDados();
-</script>
-
+    </script>
 </body>
 </html>
