@@ -3,34 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Acesso Master</title>
+    <title>Acesso Restrito</title>
     <style>
         body { font-family: sans-serif; background-color: #000; color: #fff; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
         .card { border: 2px solid #d4af37; padding: 40px; border-radius: 20px; width: 320px; text-align: center; background: #0a0a0a; box-shadow: 0 0 20px rgba(212, 175, 55, 0.4); }
         h2 { color: #d4af37; margin-bottom: 25px; text-transform: uppercase; letter-spacing: 2px; }
-        .icon { font-size: 40px; margin-bottom: 10px; }
-        input { width: 100%; padding: 15px; margin: 15px 0; border-radius: 10px; border: 1px solid #333; background: #1a1a1a; color: #fff; box-sizing: border-box; text-align: center; font-size: 16px; }
-        input:focus { border-color: #d4af37; outline: none; }
-        button { width: 100%; padding: 15px; background-color: #d4af37; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; color: #000; font-size: 16px; transition: 0.3s; }
-        button:hover { background-color: #f1c40f; transform: scale(1.05); }
-        #msg { font-size: 14px; margin-top: 20px; min-height: 20px; font-weight: bold; }
+        input { width: 100%; padding: 15px; margin: 15px 0; border-radius: 10px; border: 1px solid #333; background: #1a1a1a; color: #fff; box-sizing: border-box; text-align: center; font-size: 18px; }
+        button { width: 100%; padding: 15px; background-color: #d4af37; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; color: #000; font-size: 16px; }
+        #msg { font-size: 14px; margin-top: 20px; font-weight: bold; min-height: 20px; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <div class="icon">🔒</div>
+    <div style="font-size: 40px;">🔑</div>
     <h2>SISTEMA PRIVADO</h2>
-    <input type="password" id="accessKey" placeholder="Chave de Acesso 🔑" required>
-    <button onclick="liberarAcesso()">ENTRAR</button>
+    <input type="password" id="senha" placeholder="Digite sua Senha">
+    <button onclick="entrar()">LIBERAR ACESSO</button>
     <div id="msg"></div>
 </div>
 
-<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
 
 <script>
-    // Configurações do seu projeto ajuda-mutua-7d99a
+    // Configurações do seu projeto conforme o print
     const firebaseConfig = {
         apiKey: "AIzaSyCzTpvbMjGMTUIxMbZJjd_Kydas", 
         authDomain: "ajuda-mutua-7d99a.firebaseapp.com",
@@ -40,52 +37,45 @@
         appId: "1:1070775313117:web:fe8895ff8cb5110cb51f34"
     };
 
-    firebase.initializeApp(firebaseConfig);
+    // Inicialização
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
     const auth = firebase.auth();
 
-    // DEFINA A SUA SENHA AQUI:
-    const SENHA_MESTRA = "102030"; 
-
-    function liberarAcesso() {
-        const key = document.getElementById('accessKey').value.trim();
+    function entrar() {
+        const password = document.getElementById('senha').value;
         const msg = document.getElementById('msg');
 
-        if (!key) {
+        if (!password) {
             msg.style.color = "#ffeb3b";
-            msg.innerText = "Digite a chave!";
-            return;
-        }
-
-        // TRAVA DE SEGURANÇA: Só passa se a senha for a que você definiu
-        if (key !== SENHA_MESTRA) {
-            msg.style.color = "#ff4444";
-            msg.innerText = "ACESSO NEGADO: Chave Incorreta!";
+            msg.innerText = "Por favor, digite a senha.";
             return;
         }
 
         msg.style.color = "#aaa";
-        msg.innerText = "Autenticando...";
+        msg.innerText = "Conectando ao Firebase...";
 
-        // Se a senha estiver certa, ele loga no Firebase para garantir a sessão
-        const fakeEmail = key + "@acesso.com";
+        // Usando o e-mail que você criou no painel
+        const email = "galdinofidalgo10@gmail.com";
 
-        auth.signInWithEmailAndPassword(fakeEmail, key)
+        auth.signInWithEmailAndPassword(email, password)
             .then(() => {
                 msg.style.color = "#00ff00";
                 msg.innerText = "ACESSO LIBERADO! 🔓";
-                // window.location.href = "sua_pagina_privada.html";
+                setTimeout(() => {
+                    window.location.href = "https://galdinofidalgo10.github.io/ajuda-mutua/index.html";
+                }, 1000);
             })
             .catch((error) => {
-                // Se o usuário não existir no Firebase ainda, ele cria
-                if (error.code === 'auth/user-not-found') {
-                    auth.createUserWithEmailAndPassword(fakeEmail, key)
-                        .then(() => {
-                            msg.style.color = "#00ff00";
-                            msg.innerText = "ACESSO LIBERADO! 🔓";
-                        });
+                msg.style.color = "#ff4444";
+                console.error(error.code);
+                if (error.code === 'auth/wrong-password') {
+                    msg.innerText = "Senha Incorreta!";
+                } else if (error.code === 'auth/too-many-requests') {
+                    msg.innerText = "Muitas tentativas. Tente mais tarde.";
                 } else {
-                    msg.style.color = "#ff4444";
-                    msg.innerText = "Erro no servidor. Tente novamente.";
+                    msg.innerText = "Erro: " + error.message;
                 }
             });
     }
