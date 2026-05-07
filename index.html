@@ -3,59 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ADM ELITE | Gestão Avançada</title>
+    <title>ADM ELITE | Gestão de Ganhos</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         body { background: #020617; color: #f8fafc; font-family: 'Montserrat', sans-serif; }
-        .glass-card { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(10px); border: 1px solid rgba(212, 175, 55, 0.1); border-radius: 15px; }
-        .gold-border { border-left: 4px solid #d4af37; }
-        #login-screen { background: #020617; position: fixed; inset: 0; z-index: 9999; display: flex; align-items: center; justify-content: center; }
-        #toast { visibility: hidden; min-width: 280px; background: #d4af37; color: #000; text-align: center; border-radius: 50px; padding: 15px; position: fixed; z-index: 9999; left: 50%; top: 30px; transform: translateX(-50%); font-weight: 900; }
-        #toast.show { visibility: visible; animation: slideDown 0.5s; }
-        @keyframes slideDown { from { top: -100px; } to { top: 30px; } }
+        .glass-card { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(10px); border: 1px solid rgba(212, 175, 55, 0.1); border-radius: 20px; }
+        #auth-screen { background: #020617; position: fixed; inset: 0; z-index: 9999; display: flex; align-items: center; justify-content: center; }
+        .input-field { width: 100%; background: rgba(30, 41, 59, 0.8); border: 1px solid rgba(212, 175, 55, 0.2); padding: 15px; border-radius: 12px; color: white; outline: none; margin-bottom: 10px; }
+        #main-content { display: none; }
     </style>
 </head>
 <body class="p-6">
-    <div id="toast">Notificação</div>
 
-    <div id="login-screen">
-        <div class="glass-card p-8 w-full max-w-xs text-center border-t-4 border-yellow-500">
-            <h2 class="text-yellow-500 font-black mb-6 uppercase tracking-widest">Acesso Restrito</h2>
-            <input type="password" id="pass-input" placeholder="SENHA MESTRA" class="w-full bg-slate-900 border border-slate-700 p-4 rounded-lg mb-4 text-center text-white outline-none">
-            <button onclick="checkPass()" class="w-full bg-yellow-500 text-black font-black py-4 rounded-lg uppercase">Entrar no Painel</button>
+    <div id="auth-screen">
+        <div class="glass-card p-8 w-full max-w-sm border-t-4 border-yellow-500 shadow-2xl text-center">
+            <h2 class="text-yellow-500 font-black mb-6 uppercase tracking-widest text-xl">Acesso Master</h2>
+            <input type="email" id="email" placeholder="E-mail" class="input-field">
+            <input type="password" id="password" placeholder="Senha" class="input-field">
+            <button onclick="fazerLogin()" class="w-full bg-yellow-500 text-black font-black py-4 rounded-lg uppercase mt-4">Entrar</button>
+            <button onclick="criarConta()" class="mt-4 text-[10px] text-slate-500 uppercase font-bold">Cadastrar meu acesso</button>
         </div>
     </div>
 
-    <div class="max-w-4xl mx-auto">
-        <header class="mb-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <div id="main-content" class="max-w-4xl mx-auto">
+        <header class="mb-10 flex justify-between items-center">
             <div>
-                <h1 class="text-2xl font-black text-yellow-500 italic uppercase">Central de Comando</h1>
-                <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Protocolo Elite | Galdino Fidalgo</p>
+                <h1 class="text-2xl font-black text-yellow-500 italic uppercase">Gestão Elite</h1>
+                <p id="user-info" class="text-[9px] text-slate-500 font-bold uppercase"></p>
             </div>
-            
-            <div class="flex gap-2">
-                <div class="bg-slate-900 px-6 py-3 rounded-xl border border-yellow-500/20">
-                    <p class="text-[8px] text-slate-500 font-black uppercase">Ganhos Totais</p>
-                    <p id="ganhos-total" class="text-xl font-black text-green-500">R$ 0,00</p>
-                </div>
-                <div class="bg-yellow-500 px-6 py-3 rounded-xl text-black">
-                    <p class="text-[8px] font-black uppercase">Pendentes</p>
-                    <p id="count" class="text-xl font-black text-center">0</p>
-                </div>
-            </div>
+            <button onclick="logout()" class="text-red-500 text-[10px] font-black uppercase border border-red-500/20 px-3 py-1 rounded">Sair</button>
         </header>
 
-        <div id="lista-pendentes" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="grid grid-cols-2 gap-4 mb-8">
+            <div class="glass-card p-4 border-l-4 border-green-500">
+                <p class="text-[8px] text-slate-500 font-black uppercase">Ganhos Reais</p>
+                <p id="ganhos-total" class="text-xl font-black text-green-500">R$ 0,00</p>
             </div>
+            <div class="glass-card p-4 border-l-4 border-yellow-500">
+                <p class="text-[8px] text-slate-500 font-black uppercase">Pendentes</p>
+                <p id="count" class="text-xl font-black text-yellow-500">0</p>
+            </div>
+        </div>
+
+        <div id="lista-pendentes" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 
     <script>
         const firebaseConfig = {
-            apiKey: "AIzaSyCZIP...", // Use sua chave completa
+            apiKey: "AIzaSyCZIP...", // <--- Verifique se colou sua chave completa aqui
             authDomain: "ajuda-mutua-7d99a.firebaseapp.com",
             databaseURL: "https://ajuda-mutua-7d99a-default-rtdb.firebaseio.com",
             projectId: "ajuda-mutua-7d99a",
@@ -64,89 +64,84 @@
             appId: "1:1070775313117:web:fa90f5f0cb519ab38b1d34"
         };
         firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
         const database = firebase.database();
 
-        // 1. SISTEMA DE LOGIN (Defina sua senha abaixo)
-        function checkPass() {
-            const pass = document.getElementById('pass-input').value;
-            if(pass === "2026") { // <--- TROQUE A SENHA AQUI
-                document.getElementById('login-screen').style.display = 'none';
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                document.getElementById('auth-screen').style.display = 'none';
+                document.getElementById('main-content').style.display = 'block';
+                document.getElementById('user-info').innerText = user.email;
+                iniciarPainel();
             } else {
-                alert("SENHA INCORRETA!");
+                document.getElementById('auth-screen').style.display = 'flex';
+                document.getElementById('main-content').style.display = 'none';
             }
+        });
+
+        function fazerLogin() {
+            const e = document.getElementById('email').value;
+            const p = document.getElementById('password').value;
+            auth.signInWithEmailAndPassword(e, p).catch(err => alert("Erro: " + err.message));
         }
 
-        function showT(m) { const t = document.getElementById("toast"); t.innerText = m; t.className = "show"; setTimeout(() => t.className = "", 3000); }
+        function criarConta() {
+            const e = document.getElementById('email').value;
+            const p = document.getElementById('password').value;
+            auth.createUserWithEmailAndPassword(e, p).then(() => alert("Admin Criado!")).catch(err => alert(err.message));
+        }
 
-        // Carregar Ganhos e Lista
-        database.ref('solicitacoes/').on('value', (snapshot) => {
-            const container = document.getElementById('lista-pendentes');
-            const counter = document.getElementById('count');
-            const ganhosEl = document.getElementById('ganhos-total');
-            container.innerHTML = "";
-            const data = snapshot.val();
-            
-            let total = 0;
-            let totalGanhos = 0;
+        function logout() { auth.signOut(); }
 
-            if (data) {
+        function iniciarPainel() {
+            database.ref('solicitacoes/').on('value', snap => {
+                const container = document.getElementById('lista-pendentes');
+                const data = snap.val();
+                let total = 0;
+                container.innerHTML = "";
                 for (let id in data) {
                     total++;
                     const u = data[id];
-                    // Simulando ganho de 5 reais por confirmação (ajuste se quiser)
+                    // Define valor baseado no nível
+                    let valorNivel = 5;
+                    if(u.nivel && u.nivel.includes("Prata")) valorNivel = 10;
+                    if(u.nivel && u.nivel.includes("Ouro")) valorNivel = 20;
+
                     container.innerHTML += `
-                        <div class="glass-card p-6 gold-border shadow-2xl">
-                            <div class="flex justify-between items-start mb-4">
+                        <div class="glass-card p-5 border-l-4 border-yellow-500">
+                            <div class="flex justify-between items-start">
                                 <div>
-                                    <h3 class="font-black text-white text-sm uppercase">${u.nome}</h3>
-                                    <p class="text-[10px] text-yellow-500 font-bold uppercase">Nível: Elite</p>
+                                    <h3 class="text-white font-black text-xs uppercase">${u.nome}</h3>
+                                    <p class="text-[9px] text-yellow-500 font-bold">${u.nivel || 'Bronze (Nível 1)'}</p>
                                 </div>
-                                <span class="bg-yellow-500/10 text-yellow-500 text-[8px] font-black px-2 py-1 rounded">R$ 5,00</span>
+                                <span class="text-[9px] font-black text-slate-500">${u.data || ''}</span>
                             </div>
-                            
-                            <p class="text-[10px] text-slate-400 mb-4 font-mono">PIX/TEL: ${u.pix}</p>
-                            
-                            <div class="flex flex-col gap-2">
-                                <button onclick="ativar('${id}', 5)" class="w-full bg-green-600 text-white text-[9px] font-black py-3 rounded-lg uppercase">Confirmar e Ativar</button>
-                                <div class="flex gap-2">
-                                    <button onclick="notificar('${u.pix}', '${u.nome}')" class="flex-1 bg-blue-600 text-white text-[8px] font-black py-2 rounded uppercase">Notificar Zap</button>
-                                    <button onclick="remover('${id}')" class="flex-1 bg-red-900/40 text-white text-[8px] font-black py-2 rounded uppercase tracking-tighter">Excluir</button>
-                                </div>
+                            <p class="text-[10px] text-slate-400 mt-2">CHAVE: ${u.pix}</p>
+                            <div class="flex gap-2 mt-4">
+                                <button onclick="confirmar('${id}', ${valorNivel})" class="flex-1 bg-green-600 text-white text-[9px] font-black py-2 rounded">ATIVAR (R$ ${valorNivel})</button>
+                                <button onclick="zap('${u.pix}', '${u.nome}')" class="bg-blue-600 text-white px-3 py-2 rounded text-[9px]">ZAP</button>
                             </div>
-                        </div>
-                    `;
+                        </div>`;
                 }
-            }
-            counter.innerText = total;
-            
-            // Pega o valor total de ganhos do banco de dados (vou salvar numa pasta separada)
-            database.ref('financeiro/total').once('value', (snap) => {
-                const valor = snap.val() || 0;
-                ganhosEl.innerText = "R$ " + valor.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+                document.getElementById('count').innerText = total;
             });
-        });
 
-        function ativar(id, valor) {
-            if(confirm("Confirmar recebimento de R$ 5,00?")) {
-                // Atualiza o contador de ganhos no banco
-                database.ref('financeiro/total').transaction((current) => {
-                    return (current || 0) + valor;
-                });
+            database.ref('financeiro/total').on('value', snap => {
+                const val = snap.val() || 0;
+                document.getElementById('ganhos-total').innerText = "R$ " + val.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+            });
+        }
+
+        function confirmar(id, valor) {
+            if(confirm("Confirmar recebimento de R$ " + valor + "?")) {
+                database.ref('financeiro/total').transaction(c => (c || 0) + valor);
                 database.ref('solicitacoes/' + id).remove();
-                showT("LÍDER CONFIRMADO NO SISTEMA!");
             }
         }
 
-        function notificar(pix, nome) {
-            const msg = window.encodeURIComponent(`Olá ${nome}, aqui é do Protocolo Elite. Vi seu cadastro no sistema e sua ativação foi concluída com sucesso! Seja bem-vindo.`);
-            window.open(`https://api.whatsapp.com/send?phone=55${pix.replace(/\D/g,'')}&text=${msg}`);
-        }
-
-        function remover(id) {
-            if(confirm("Deseja descartar esta entrada?")) {
-                database.ref('solicitacoes/' + id).remove();
-                showT("SOLICITAÇÃO DESCARTADA.");
-            }
+        function zap(tel, nome) {
+            const msg = window.encodeURIComponent(`Olá ${nome}, seu cadastro no Protocolo Elite foi aprovado!`);
+            window.open(`https://api.whatsapp.com/send?phone=55${tel.replace(/\D/g,'')}&text=${msg}`);
         }
     </script>
 </body>
