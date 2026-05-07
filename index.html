@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ADM ELITE | Gestão de Ganhos</title>
+    <title>ADM ELITE | Gestão Avançada</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
@@ -22,7 +22,7 @@
             <input type="email" id="email" placeholder="E-mail" class="input-field">
             <input type="password" id="password" placeholder="Senha" class="input-field">
             <button onclick="fazerLogin()" class="w-full bg-yellow-500 text-black font-black py-4 rounded-lg uppercase mt-4">Entrar</button>
-            <button onclick="criarConta()" class="mt-4 text-[10px] text-slate-500 uppercase font-bold">Cadastrar meu acesso</button>
+            <button onclick="criarConta()" class="mt-4 text-[10px] text-slate-500 uppercase font-bold">Cadastrar meu e-mail</button>
         </div>
     </div>
 
@@ -37,7 +37,7 @@
 
         <div class="grid grid-cols-2 gap-4 mb-8">
             <div class="glass-card p-4 border-l-4 border-green-500">
-                <p class="text-[8px] text-slate-500 font-black uppercase">Ganhos Reais</p>
+                <p class="text-[8px] text-slate-500 font-black uppercase">Ganhos Totais</p>
                 <p id="ganhos-total" class="text-xl font-black text-green-500">R$ 0,00</p>
             </div>
             <div class="glass-card p-4 border-l-4 border-yellow-500">
@@ -55,13 +55,13 @@
 
     <script>
         const firebaseConfig = {
-            apiKey: "AIzaSyCZIP...", // <--- Verifique se colou sua chave completa aqui
+            apiKey: "AIzaSyCZIpVpWjOMtULxM5ZJjG_Kydas2UPE4Lk",
             authDomain: "ajuda-mutua-7d99a.firebaseapp.com",
             databaseURL: "https://ajuda-mutua-7d99a-default-rtdb.firebaseio.com",
             projectId: "ajuda-mutua-7d99a",
-            storageBucket: "ajuda-mutua-7d99a.appspot.com",
+            storageBucket: "ajuda-mutua-7d99a.firebasestorage.app",
             messagingSenderId: "1070775313117",
-            appId: "1:1070775313117:web:fa90f5f0cb519ab38b1d34"
+            appId: "1:1070775313117:web:fa8095ff0cb519ab38b134"
         };
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
@@ -71,7 +71,7 @@
             if (user) {
                 document.getElementById('auth-screen').style.display = 'none';
                 document.getElementById('main-content').style.display = 'block';
-                document.getElementById('user-info').innerText = user.email;
+                document.getElementById('user-info').innerText = "ADM: " + user.email;
                 iniciarPainel();
             } else {
                 document.getElementById('auth-screen').style.display = 'flex';
@@ -82,13 +82,13 @@
         function fazerLogin() {
             const e = document.getElementById('email').value;
             const p = document.getElementById('password').value;
-            auth.signInWithEmailAndPassword(e, p).catch(err => alert("Erro: " + err.message));
+            auth.signInWithEmailAndPassword(e, p).catch(err => alert("Erro no Login: " + err.message));
         }
 
         function criarConta() {
             const e = document.getElementById('email').value;
             const p = document.getElementById('password').value;
-            auth.createUserWithEmailAndPassword(e, p).then(() => alert("Admin Criado!")).catch(err => alert(err.message));
+            auth.createUserWithEmailAndPassword(e, p).then(() => alert("Conta criada com sucesso!")).catch(err => alert(err.message));
         }
 
         function logout() { auth.signOut(); }
@@ -102,23 +102,19 @@
                 for (let id in data) {
                     total++;
                     const u = data[id];
-                    // Define valor baseado no nível
-                    let valorNivel = 5;
-                    if(u.nivel && u.nivel.includes("Prata")) valorNivel = 10;
-                    if(u.nivel && u.nivel.includes("Ouro")) valorNivel = 20;
+                    let val = 5;
+                    if(u.nivel && u.nivel.includes("Prata")) val = 10;
+                    if(u.nivel && u.nivel.includes("Ouro")) val = 20;
 
                     container.innerHTML += `
                         <div class="glass-card p-5 border-l-4 border-yellow-500">
-                            <div class="flex justify-between items-start">
-                                <div>
-                                    <h3 class="text-white font-black text-xs uppercase">${u.nome}</h3>
-                                    <p class="text-[9px] text-yellow-500 font-bold">${u.nivel || 'Bronze (Nível 1)'}</p>
-                                </div>
-                                <span class="text-[9px] font-black text-slate-500">${u.data || ''}</span>
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="text-white font-black text-xs uppercase">${u.nome}</h3>
+                                <span class="text-[9px] font-bold text-yellow-500">${u.nivel || 'Bronze'}</span>
                             </div>
-                            <p class="text-[10px] text-slate-400 mt-2">CHAVE: ${u.pix}</p>
+                            <p class="text-[10px] text-slate-400 font-mono">PIX: ${u.pix}</p>
                             <div class="flex gap-2 mt-4">
-                                <button onclick="confirmar('${id}', ${valorNivel})" class="flex-1 bg-green-600 text-white text-[9px] font-black py-2 rounded">ATIVAR (R$ ${valorNivel})</button>
+                                <button onclick="confirmar('${id}', ${val})" class="flex-1 bg-green-600 text-white text-[9px] font-black py-2 rounded">ATIVAR R$${val}</button>
                                 <button onclick="zap('${u.pix}', '${u.nome}')" class="bg-blue-600 text-white px-3 py-2 rounded text-[9px]">ZAP</button>
                             </div>
                         </div>`;
@@ -133,14 +129,14 @@
         }
 
         function confirmar(id, valor) {
-            if(confirm("Confirmar recebimento de R$ " + valor + "?")) {
+            if(confirm("Confirmar recebimento?")) {
                 database.ref('financeiro/total').transaction(c => (c || 0) + valor);
                 database.ref('solicitacoes/' + id).remove();
             }
         }
 
         function zap(tel, nome) {
-            const msg = window.encodeURIComponent(`Olá ${nome}, seu cadastro no Protocolo Elite foi aprovado!`);
+            const msg = window.encodeURIComponent(`Olá ${nome}, seu pagamento foi confirmado!`);
             window.open(`https://api.whatsapp.com/send?phone=55${tel.replace(/\D/g,'')}&text=${msg}`);
         }
     </script>
