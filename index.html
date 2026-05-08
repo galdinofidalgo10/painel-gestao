@@ -3,67 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Escritório Virtual | Protocolo Elite</title>
+    <title>Gestão Elite | Admin</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         body { background: #020617; color: #f8fafc; font-family: 'Montserrat', sans-serif; }
-        .glass-card { background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(184, 134, 11, 0.2); border-radius: 20px; }
+        .glass-card { background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(212, 175, 55, 0.1); border-radius: 15px; }
         .btn-gold { background: linear-gradient(135deg, #b8860b 0%, #fde047 100%); color: #000; font-weight: 900; }
-        .barra-progresso { background: rgba(255,255,255,0.05); border-radius: 10px; height: 8px; overflow: hidden; }
-        .progresso-fill { background: linear-gradient(90deg, #b8860b, #fde047); height: 100%; width: 0%; transition: width 1s; }
-        /* Painel começa escondido para não dar erro visual */
-        #painelReal { display: none; }
+        .status-pendente { border-left: 4px solid #fde047; }
+        .status-liberado { border-left: 4px solid #22c55e; opacity: 0.8; }
+        .thumb { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 2px solid #fde047; cursor: pointer; transition: 0.3s; }
+        .thumb:hover { transform: scale(1.1); border-color: #fff; }
     </style>
 </head>
 <body class="p-4">
-    <div id="status" class="text-center py-20">
-        <p class="text-yellow-500 font-bold animate-pulse text-xs uppercase tracking-widest">Sincronizando com Firebase...</p>
-    </div>
-
-    <div id="painelReal" class="max-w-md mx-auto">
-        <header class="mb-6 pt-4 flex justify-between items-start">
-            <div>
-                <h1 class="text-xl font-black text-yellow-500 uppercase italic leading-tight">Escritório<br>Virtual</h1>
-                <p id="nomeExibicao" class="text-[10px] text-white font-bold uppercase mt-1 font-mono">Carregando...</p>
-            </div>
-            <span id="statusBadge" class="text-[9px] font-black uppercase p-1 px-2 glass-card text-yellow-500 italic">Verificando</span>
+    <div class="max-w-2xl mx-auto">
+        <header class="text-center mb-6 pt-4">
+            <h1 class="text-2xl font-black italic text-yellow-500 uppercase">Gestão Elite</h1>
+            <p id="contador" class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Sincronizando Banco de Dados...</p>
         </header>
-
-        <div class="glass-card p-6 mb-6 border-t-2 border-yellow-500/30 shadow-2xl">
-            <h2 class="text-[10px] font-black text-center mb-6 uppercase tracking-widest text-white italic">Sua Evolução Elite</h2>
-            <div class="space-y-6">
-                <div>
-                    <div class="flex justify-between text-[9px] mb-2 font-bold uppercase text-yellow-500">
-                        <span>Nível 1</span> <span id="txt_n1" class="text-white">0 / 3</span>
-                    </div>
-                    <div class="barra-progresso"><div id="bar_n1" class="progresso-fill"></div></div>
-                </div>
-                <div>
-                    <div class="flex justify-between text-[9px] mb-2 font-bold uppercase text-yellow-500">
-                        <span>Nível 2</span> <span id="txt_n2" class="text-white">0 / 9</span>
-                    </div>
-                    <div class="barra-progresso"><div id="bar_n2" class="progresso-fill"></div></div>
-                </div>
-            </div>
-        </div>
-
-        <div id="areaLink" class="glass-card p-4 mb-6 hidden border border-yellow-500/20">
-            <p class="text-[10px] text-yellow-500 font-bold mb-2 text-center uppercase italic">Seu Link de Convite</p>
-            <div class="flex gap-2">
-                <input type="text" id="linkConvite" readonly class="w-full bg-black/40 border border-white/5 p-2 rounded text-[10px] text-white font-mono outline-none">
-                <button onclick="copiar()" class="btn-gold px-4 rounded text-[10px] italic">COPIAR</button>
-            </div>
-        </div>
-
-        <div class="text-center py-4 glass-card text-[8px] font-black text-slate-500 uppercase tracking-widest border border-white/5">
-            Suporte Protocolo Elite
-        </div>
+        <div id="lista" class="space-y-4"></div>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
-
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyCZIP0M0M8FqC_LAtI9I36e_IIn_V-C4m4",
@@ -76,70 +39,63 @@
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
-        // CAPTURA O USUÁRIO DO LINK
-        const params = new URLSearchParams(window.location.search);
-        const userUrl = params.get('user');
-        
-        if(userUrl) {
-            localStorage.setItem('usuario_nome', decodeURIComponent(userUrl).trim());
-            // LIMPA A URL MAS NÃO REDIRECIONA PARA GESTÃO
-            window.history.replaceState({}, document.title, window.location.pathname);
-        }
-
-        let meuNome = localStorage.getItem('usuario_nome');
-
-        // SÓ ATUA SE TIVER UM NOME DEFINIDO
-        if(!meuNome) {
-            document.getElementById('status').innerHTML = "<p class='text-red-500'>ERRO: ACESSO NÃO AUTORIZADO.<br>USE O LINK ENVIADO PELO GESTOR.</p>";
-        } else {
-            database.ref('solicitacoes/').on('value', (snap) => {
-                let achou = false, liberado = false, n1=0, n2=0;
-                const rede = [];
-
-                snap.forEach(c => {
-                    const u = c.val(); rede.push(u);
-                    if(u.nome === meuNome) {
-                        achou = true;
-                        if(u.status === 'liberado') liberado = true;
-                    }
-                });
-
-                if(achou) {
-                    document.getElementById('status').style.display = "none";
-                    document.getElementById('painelReal').style.display = "block";
-                    document.getElementById('nomeExibicao').innerText = "Líder: " + meuNome;
-
-                    if(liberado) {
-                        document.getElementById('statusBadge').innerText = "CONTA ATIVA";
-                        document.getElementById('statusBadge').className = "text-green-500 font-black p-1 px-2 glass-card italic text-[9px]";
-                        document.getElementById('areaLink').classList.remove('hidden');
-                        document.getElementById('linkConvite').value = window.location.origin + window.location.pathname + "?ref=" + encodeURIComponent(meuNome);
-                    }
-
-                    // Contagem de Rede
-                    rede.forEach(u1 => {
-                        if(u1.indicado_por === meuNome && u1.status === 'liberado') {
-                            n1++;
-                            rede.forEach(u2 => {
-                                if(u2.indicado_por === u1.nome && u2.status === 'liberado') n2++;
-                            });
-                        }
+        database.ref('solicitacoes/').on('value', (snap) => {
+            const list = document.getElementById('lista');
+            list.innerHTML = "";
+            let count = 0;
+            
+            snap.forEach((child) => {
+                count++;
+                const u = child.val();
+                const id = child.key;
+                const isLib = u.status === 'liberado';
+                
+                let fHtml = "";
+                if(u.comprovantes) {
+                    u.comprovantes.forEach(img => {
+                        fHtml += `<img src="${img}" class="thumb" onclick="window.open('${img}')">`;
                     });
-
-                    document.getElementById('bar_n1').style.width = (n1/3*100 > 100 ? 100 : n1/3*100) + "%";
-                    document.getElementById('txt_n1').innerText = n1 + " / 3";
-                    document.getElementById('bar_n2').style.width = (n2/9*100 > 100 ? 100 : n2/9*100) + "%";
-                    document.getElementById('txt_n2').innerText = n2 + " / 9";
-                } else {
-                    document.getElementById('status').innerText = "USUÁRIO NÃO ENCONTRADO NO SISTEMA.";
                 }
+
+                // CORREÇÃO DEFINITIVA DO LINK:
+                // Pega o endereço base do site (ex: galdino.github.io/ajuda/) e garante o index.html
+                const urlAtual = window.location.href.split('gestao.html')[0];
+                const linkMembro = `${urlAtual}index.html?user=${encodeURIComponent(u.nome)}`;
+                
+                const textoZap = encodeURIComponent(`Olá ${u.nome}! Seu cadastro no Protocolo Elite foi aprovado.\n\nAcesse seu Escritório Virtual aqui:\n${linkMembro}`);
+                const linkZap = `https://api.whatsapp.com/send?phone=55${u.whatsapp}&text=${textoZap}`;
+
+                list.innerHTML += `
+                    <div class="glass-card p-4 ${isLib ? 'status-liberado' : 'status-pendente'}">
+                        <div class="flex justify-between items-start mb-3 text-white">
+                            <div>
+                                <h3 class="font-black text-sm uppercase">${u.nome}</h3>
+                                <p class="text-[10px] text-yellow-500 font-bold">PIX: ${u.pix} | ZAP: ${u.whatsapp}</p>
+                            </div>
+                            <div class="flex gap-1">
+                                ${!isLib ? 
+                                    `<button onclick="aprovar('${id}')" class="btn-gold px-3 py-2 rounded text-[9px]">LIBERAR</button>` : 
+                                    `<a href="${linkZap}" target="_blank" class="bg-green-600 text-white px-3 py-2 rounded text-[9px] font-black italic">ENVIAR ACESSO</a>`
+                                }
+                                <button onclick="remover('${id}')" class="bg-red-600/20 text-red-500 px-3 py-2 rounded text-[9px]">X</button>
+                            </div>
+                        </div>
+                        <div class="flex gap-2 bg-black/40 p-2 rounded-lg overflow-x-auto">${fHtml || '<p class="text-[8px] text-slate-600">Sem comprovantes</p>'}</div>
+                    </div>`;
             });
+            document.getElementById('contador').innerText = count + " SOLICITAÇÕES REGISTRADAS";
+        });
+
+        function aprovar(id) {
+            if(confirm("Deseja aprovar este líder?")) {
+                database.ref('solicitacoes/' + id).update({ status: 'liberado' });
+            }
         }
 
-        function copiar() {
-            const i = document.getElementById("linkConvite");
-            i.select(); navigator.clipboard.writeText(i.value);
-            alert("Link de convite copiado!");
+        function remover(id) {
+            if(confirm("Apagar solicitação permanentemente?")) {
+                database.ref('solicitacoes/' + id).remove();
+            }
         }
     </script>
 </body>
