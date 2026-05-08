@@ -12,14 +12,15 @@
         .btn-gold { background: linear-gradient(135deg, #b8860b 0%, #fde047 100%); color: #000; font-weight: 900; }
         .status-pendente { border-left: 4px solid #fde047; }
         .status-liberado { border-left: 4px solid #22c55e; opacity: 0.8; }
-        .thumb { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 2px solid #fde047; cursor: pointer; }
+        .thumb { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 2px solid #fde047; cursor: pointer; transition: 0.3s; }
+        .thumb:hover { transform: scale(1.1); }
     </style>
 </head>
 <body class="p-4">
     <div class="max-w-2xl mx-auto">
         <header class="text-center mb-6 pt-4">
-            <h1 class="text-2xl font-black italic text-yellow-500 uppercase">Gestão Elite</h1>
-            <p id="contador" class="text-[9px] font-bold text-slate-500 uppercase">Sincronizando Banco de Dados...</p>
+            <h1 class="text-2xl font-black italic text-yellow-500 uppercase tracking-tighter">Gestão Elite</h1>
+            <p id="contador" class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Sincronizando Banco de Dados...</p>
         </header>
         <div id="lista" class="space-y-4"></div>
     </div>
@@ -51,13 +52,13 @@
                 
                 let fHtml = "";
                 if(u.comprovantes) {
-                    u.comprovantes.forEach(img => { fHtml += `<img src="${img}" class="thumb" onclick="window.open('${img}')">`; });
+                    u.comprovantes.forEach(img => {
+                        fHtml += `<img src="${img}" class="thumb" onclick="window.open('${img}')">`;
+                    });
                 }
 
-                // --- AQUI ESTÁ A CORREÇÃO DO LINK ---
-                // Ele pega o endereço do seu GitHub e garante que aponte para o index.html principal
-                const urlBase = window.location.origin + window.location.pathname.split('painel-gestao')[0].split('gestao.html')[0];
-                const linkMembro = urlBase + "index.html?user=" + encodeURIComponent(u.nome);
+                // CORREÇÃO DO LINK PARA APONTAR PARA O REPOSITÓRIO AJUDA-P2P
+                const linkMembro = "https://galdinofidalgo10.github.io/ajuda-p2p/index.html?user=" + encodeURIComponent(u.nome);
                 
                 const textoZap = encodeURIComponent(`Olá ${u.nome}! Seu acesso ao Protocolo Elite foi aprovado.\n\nAbra seu Escritório Virtual aqui:\n${linkMembro}`);
                 const linkZap = `https://api.whatsapp.com/send?phone=55${u.whatsapp}&text=${textoZap}`;
@@ -66,25 +67,28 @@
                     <div class="glass-card p-4 ${isLib ? 'status-liberado' : 'status-pendente'}">
                         <div class="flex justify-between items-start mb-3 text-white">
                             <div>
-                                <h3 class="font-black text-sm uppercase">${u.nome}</h3>
+                                <h3 class="font-black text-sm uppercase leading-tight">${u.nome}</h3>
                                 <p class="text-[10px] text-yellow-500 font-bold">PIX: ${u.pix} | ZAP: ${u.whatsapp}</p>
+                                <p class="text-[8px] text-slate-400">Indicador: ${u.indicado_por || 'Direto'}</p>
                             </div>
                             <div class="flex gap-1">
                                 ${!isLib ? 
-                                    `<button onclick="aprovar('${id}')" class="btn-gold px-3 py-2 rounded text-[9px]">LIBERAR</button>` : 
-                                    `<a href="${linkZap}" target="_blank" class="bg-green-600 text-white px-3 py-2 rounded text-[9px] font-black italic text-center uppercase">Enviar Acesso</a>`
+                                    `<button onclick="aprovar('${id}')" class="btn-gold px-3 py-2 rounded text-[9px] uppercase">Liberar</button>` : 
+                                    `<a href="${linkZap}" target="_blank" class="bg-green-600 text-white px-3 py-2 rounded text-[9px] font-black italic text-center uppercase tracking-tighter">Enviar Acesso</a>`
                                 }
-                                <button onclick="remover('${id}')" class="bg-red-600/20 text-red-500 px-3 py-2 rounded text-[9px]">X</button>
+                                <button onclick="remover('${id}')" class="bg-red-600/20 text-red-500 px-2 py-2 rounded text-[9px]">X</button>
                             </div>
                         </div>
-                        <div class="flex gap-2 bg-black/40 p-2 rounded-lg overflow-x-auto">${fHtml || '<p class="text-[8px] text-slate-500">Sem prints</p>'}</div>
+                        <div class="flex gap-2 bg-black/40 p-2 rounded-lg overflow-x-auto">
+                            ${fHtml || '<p class="text-[8px] text-slate-600 font-bold uppercase italic">Aguardando Prints</p>'}
+                        </div>
                     </div>`;
             });
-            document.getElementById('contador').innerText = count + " LÍDERES REGISTRADOS";
+            document.getElementById('contador').innerText = count + " LÍDERES NO SISTEMA";
         });
 
-        function aprovar(id) { if(confirm("Liberar acesso?")) database.ref('solicitacoes/'+id).update({status:'liberado'}); }
-        function remover(id) { if(confirm("Apagar?")) database.ref('solicitacoes/'+id).remove(); }
+        function aprovar(id) { if(confirm("Confirmar ativação deste líder?")) database.ref('solicitacoes/'+id).update({status:'liberado'}); }
+        function remover(id) { if(confirm("Remover permanentemente?")) database.ref('solicitacoes/'+id).remove(); }
     </script>
 </body>
 </html>
