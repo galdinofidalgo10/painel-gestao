@@ -19,7 +19,7 @@
     <div class="max-w-2xl mx-auto">
         <header class="text-center mb-6 pt-4">
             <h1 class="text-2xl font-black italic text-yellow-500 uppercase tracking-tighter">Gestão Elite</h1>
-            <p id="contador" class="text-[9px] font-bold text-slate-500 tracking-widest uppercase italic">Sincronizando...</p>
+            <p id="contador" class="text-[9px] font-bold text-slate-500 tracking-widest uppercase italic font-mono">Sincronizando...</p>
         </header>
         <div id="lista" class="space-y-4"></div>
     </div>
@@ -50,12 +50,11 @@
                 let fHtml = "";
                 if(u.comprovantes) u.comprovantes.forEach(img => { fHtml += `<img src="${img}" class="thumb" onclick="openFull('${img}')">`; });
 
-                // --- CORREÇÃO DO LINK PARA ABRIR O INDEX.HTML ---
-                // Pegamos o link atual (gestao.html) e trocamos por index.html
-                const urlAtual = window.location.href;
-                const siteUrl = urlAtual.replace('gestao.html', 'index.html') + "?user=" + window.encodeURIComponent(u.nome);
+                // --- TRAVA DE LINK PARA O INDEX.HTML ---
+                const urlBase = window.location.origin + window.location.pathname.replace('gestao.html', '');
+                const siteUrl = urlBase + "index.html?user=" + window.encodeURIComponent(u.nome);
                 
-                const msg = window.encodeURIComponent(`Olá ${u.nome}! Seu acesso ao Protocolo Elite está liberado.\n\nAbra seu Escritório Virtual por aqui:\n${siteUrl}`);
+                const msg = window.encodeURIComponent(`Olá ${u.nome}! Seu acesso ao Protocolo Elite foi aprovado.\n\nAbra seu Escritório Virtual por aqui:\n${siteUrl}`);
                 const zapLink = `https://api.whatsapp.com/send?phone=55${u.whatsapp}&text=${msg}`;
 
                 list.innerHTML += `
@@ -63,8 +62,7 @@
                         <div class="flex justify-between items-start mb-3 text-white">
                             <div>
                                 <h3 class="font-black text-xs uppercase">${u.nome}</h3>
-                                <p class="text-[9px] text-yellow-500 font-bold">PIX: ${u.pix} | ZAP: ${u.whatsapp}</p>
-                                <p class="text-[7px] text-slate-500 italic mt-1 text-white">Indicado por: ${u.indicado_por || 'Direto'}</p>
+                                <p class="text-[9px] text-yellow-500 font-bold italic">PIX: ${u.pix} | ZAP: ${u.whatsapp}</p>
                             </div>
                             <div class="flex gap-1">
                                 ${!isLib ? `<button onclick="liber('${id}')" class="btn-gold px-2 py-1.5 rounded text-[8px]">LIBERAR</button>` : `<a href="${zapLink}" target="_blank" class="bg-green-600 text-white px-2 py-1.5 rounded text-[8px] font-bold">ENVIAR ACESSO</a>`}
