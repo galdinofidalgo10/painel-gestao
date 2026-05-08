@@ -50,15 +50,13 @@
                 let fHtml = "";
                 if(u.comprovantes) u.comprovantes.forEach(img => { fHtml += `<img src="${img}" class="thumb" onclick="openFull('${img}')">`; });
 
-                // --- AJUSTE DE LINK PARA ABRIR O PAINEL DE MEMBRO CORRETAMENTE ---
-                // Identifica a pasta atual e aponta para o index.html (seu escritório virtual)
-                const path = window.location.pathname.replace('gestao.html', '');
-                const urlBase = window.location.origin + path;
-                const siteUrl = urlBase + "index.html?user=" + window.encodeURIComponent(u.nome);
+                // --- CORREÇÃO DO LINK PARA ABRIR O INDEX.HTML ---
+                // Pegamos o link atual (gestao.html) e trocamos por index.html
+                const urlAtual = window.location.href;
+                const siteUrl = urlAtual.replace('gestao.html', 'index.html') + "?user=" + window.encodeURIComponent(u.nome);
                 
-                const msg = window.encodeURIComponent(`Olá ${u.nome}! Seu cadastro no Protocolo Elite foi aprovado. Acesse agora seu Escritório Virtual:\n\n${siteUrl}`);
+                const msg = window.encodeURIComponent(`Olá ${u.nome}! Seu acesso ao Protocolo Elite está liberado.\n\nAbra seu Escritório Virtual por aqui:\n${siteUrl}`);
                 const zapLink = `https://api.whatsapp.com/send?phone=55${u.whatsapp}&text=${msg}`;
-                // ---------------------------------------------------------------
 
                 list.innerHTML += `
                     <div class="glass-card p-4 ${isLib ? 'status-liberado' : 'status-pendente'}">
