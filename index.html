@@ -50,9 +50,11 @@
                 let fHtml = "";
                 if(u.comprovantes) u.comprovantes.forEach(img => { fHtml += `<img src="${img}" class="thumb" onclick="openFull('${img}')">`; });
 
-                // Link ajustado para passar o nome do usuário automaticamente
-                const siteUrl = window.location.href.split('gestao.html')[0] + "membro.html?user=" + window.encodeURIComponent(u.nome);
-                const msg = window.encodeURIComponent(`Olá ${u.nome}! Seu cadastro no Protocolo Elite foi aprovado. Acesse agora seu Escritório Virtual para acompanhar sua rede e gerar seu link:\n\n${siteUrl}`);
+                // AJUSTE AQUI: O link agora aponta para index.html (seu arquivo no GitHub)
+                const urlBase = window.location.href.split('gestao.html')[0];
+                const siteUrl = urlBase + "index.html?user=" + window.encodeURIComponent(u.nome);
+                
+                const msg = window.encodeURIComponent(`Olá ${u.nome}! Seu cadastro no Protocolo Elite foi aprovado.\n\nAcesse agora seu Escritório Virtual:\n${siteUrl}`);
                 const zapLink = `https://api.whatsapp.com/send?phone=55${u.whatsapp}&text=${msg}`;
 
                 list.innerHTML += `
