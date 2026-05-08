@@ -50,12 +50,15 @@
                 let fHtml = "";
                 if(u.comprovantes) u.comprovantes.forEach(img => { fHtml += `<img src="${img}" class="thumb" onclick="openFull('${img}')">`; });
 
-                // AJUSTE AQUI: O link agora aponta para index.html (seu arquivo no GitHub)
-                const urlBase = window.location.href.split('gestao.html')[0];
+                // --- AJUSTE DE LINK PARA ABRIR O PAINEL DE MEMBRO CORRETAMENTE ---
+                // Identifica a pasta atual e aponta para o index.html (seu escritório virtual)
+                const path = window.location.pathname.replace('gestao.html', '');
+                const urlBase = window.location.origin + path;
                 const siteUrl = urlBase + "index.html?user=" + window.encodeURIComponent(u.nome);
                 
-                const msg = window.encodeURIComponent(`Olá ${u.nome}! Seu cadastro no Protocolo Elite foi aprovado.\n\nAcesse agora seu Escritório Virtual:\n${siteUrl}`);
+                const msg = window.encodeURIComponent(`Olá ${u.nome}! Seu cadastro no Protocolo Elite foi aprovado. Acesse agora seu Escritório Virtual:\n\n${siteUrl}`);
                 const zapLink = `https://api.whatsapp.com/send?phone=55${u.whatsapp}&text=${msg}`;
+                // ---------------------------------------------------------------
 
                 list.innerHTML += `
                     <div class="glass-card p-4 ${isLib ? 'status-liberado' : 'status-pendente'}">
