@@ -12,15 +12,14 @@
         .btn-gold { background: linear-gradient(135deg, #b8860b 0%, #fde047 100%); color: #000; font-weight: 900; }
         .status-pendente { border-left: 4px solid #fde047; }
         .status-liberado { border-left: 4px solid #22c55e; opacity: 0.8; }
-        .thumb { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 2px solid #fde047; cursor: pointer; transition: 0.3s; }
-        .thumb:hover { transform: scale(1.1); border-color: #fff; }
+        .thumb { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 2px solid #fde047; cursor: pointer; }
     </style>
 </head>
 <body class="p-4">
     <div class="max-w-2xl mx-auto">
         <header class="text-center mb-6 pt-4">
             <h1 class="text-2xl font-black italic text-yellow-500 uppercase">Gestão Elite</h1>
-            <p id="contador" class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Sincronizando Banco de Dados...</p>
+            <p id="contador" class="text-[9px] font-bold text-slate-500 uppercase">Sincronizando...</p>
         </header>
         <div id="lista" class="space-y-4"></div>
     </div>
@@ -52,17 +51,14 @@
                 
                 let fHtml = "";
                 if(u.comprovantes) {
-                    u.comprovantes.forEach(img => {
-                        fHtml += `<img src="${img}" class="thumb" onclick="window.open('${img}')">`;
-                    });
+                    u.comprovantes.forEach(img => { fHtml += `<img src="${img}" class="thumb" onclick="window.open('${img}')">`; });
                 }
 
-                // CORREÇÃO DEFINITIVA DO LINK:
-                // Pega o endereço base do site (ex: galdino.github.io/ajuda/) e garante o index.html
-                const urlAtual = window.location.href.split('gestao.html')[0];
-                const linkMembro = `${urlAtual}index.html?user=${encodeURIComponent(u.nome)}`;
+                // GERAÇÃO DE LINK SEM ERRO DE DUPLICAÇÃO
+                const base = window.location.origin + window.location.pathname.split('gestao.html')[0];
+                const linkMembro = base + "index.html?user=" + encodeURIComponent(u.nome);
                 
-                const textoZap = encodeURIComponent(`Olá ${u.nome}! Seu cadastro no Protocolo Elite foi aprovado.\n\nAcesse seu Escritório Virtual aqui:\n${linkMembro}`);
+                const textoZap = encodeURIComponent(`Olá ${u.nome}! Seu acesso ao Protocolo Elite foi aprovado.\n\nAbra seu Escritório Virtual aqui:\n${linkMembro}`);
                 const linkZap = `https://api.whatsapp.com/send?phone=55${u.whatsapp}&text=${textoZap}`;
 
                 list.innerHTML += `
@@ -75,28 +71,19 @@
                             <div class="flex gap-1">
                                 ${!isLib ? 
                                     `<button onclick="aprovar('${id}')" class="btn-gold px-3 py-2 rounded text-[9px]">LIBERAR</button>` : 
-                                    `<a href="${linkZap}" target="_blank" class="bg-green-600 text-white px-3 py-2 rounded text-[9px] font-black italic">ENVIAR ACESSO</a>`
+                                    `<a href="${linkZap}" target="_blank" class="bg-green-600 text-white px-3 py-2 rounded text-[9px] font-black italic text-center">ENVIAR ACESSO</a>`
                                 }
                                 <button onclick="remover('${id}')" class="bg-red-600/20 text-red-500 px-3 py-2 rounded text-[9px]">X</button>
                             </div>
                         </div>
-                        <div class="flex gap-2 bg-black/40 p-2 rounded-lg overflow-x-auto">${fHtml || '<p class="text-[8px] text-slate-600">Sem comprovantes</p>'}</div>
+                        <div class="flex gap-2 bg-black/40 p-2 rounded-lg overflow-x-auto">${fHtml || '<p class="text-[8px]">Sem prints</p>'}</div>
                     </div>`;
             });
-            document.getElementById('contador').innerText = count + " SOLICITAÇÕES REGISTRADAS";
+            document.getElementById('contador').innerText = count + " LÍDERES NO SISTEMA";
         });
 
-        function aprovar(id) {
-            if(confirm("Deseja aprovar este líder?")) {
-                database.ref('solicitacoes/' + id).update({ status: 'liberado' });
-            }
-        }
-
-        function remover(id) {
-            if(confirm("Apagar solicitação permanentemente?")) {
-                database.ref('solicitacoes/' + id).remove();
-            }
-        }
+        function aprovar(id) { if(confirm("Liberar este acesso?")) database.ref('solicitacoes/'+id).update({status:'liberado'}); }
+        function remover(id) { if(confirm("Apagar solicitação?")) database.ref('solicitacoes/'+id).remove(); }
     </script>
 </body>
 </html>
