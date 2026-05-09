@@ -12,8 +12,8 @@
         .btn-gold { background: linear-gradient(135deg, #b8860b 0%, #fde047 100%); color: #000; font-weight: 900; }
         .status-pendente { border-left: 4px solid #fde047; }
         .status-liberado { border-left: 4px solid #22c55e; opacity: 0.8; }
-        .thumb { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 2px solid #fde047; cursor: pointer; transition: 0.3s; }
-        .thumb:hover { transform: scale(1.1); }
+        .thumb { width: 100px; height: 120px; object-fit: cover; border-radius: 8px; border: 2px solid #fde047; cursor: pointer; transition: 0.3s; flex-shrink: 0; }
+        .thumb:hover { transform: scale(1.05); }
     </style>
 </head>
 <body class="p-4">
@@ -57,10 +57,10 @@
                     });
                 }
 
-                // CORREÇÃO DO LINK PARA APONTAR PARA O REPOSITÓRIO AJUDA-P2P
-                const linkMembro = "https://galdinofidalgo10.github.io/ajuda-p2p/index.html?user=" + encodeURIComponent(u.nome);
+                // O MACETE: O link enviado agora leva direto para a página de CADASTRO
+                const linkCadastro = "https://galdinofidalgo10.github.io/ajuda-p2p/cadastro/index.html?n1=" + encodeURIComponent(u.nome) + "&p1=" + encodeURIComponent(u.pix);
                 
-                const textoZap = encodeURIComponent(`Olá ${u.nome}! Seu acesso ao Protocolo Elite foi aprovado.\n\nAbra seu Escritório Virtual aqui:\n${linkMembro}`);
+                const textoZap = encodeURIComponent(`Olá ${u.nome}! Aqui está o seu acesso. ✅\n\nCadastre-se e envie seus 3 prints aqui:\n${linkCadastro}`);
                 const linkZap = `https://api.whatsapp.com/send?phone=55${u.whatsapp}&text=${textoZap}`;
 
                 list.innerHTML += `
@@ -68,26 +68,26 @@
                         <div class="flex justify-between items-start mb-3 text-white">
                             <div>
                                 <h3 class="font-black text-sm uppercase leading-tight">${u.nome}</h3>
-                                <p class="text-[10px] text-yellow-500 font-bold">PIX: ${u.pix} | ZAP: ${u.whatsapp}</p>
+                                <p class="text-[9px] text-yellow-500 font-bold">PIX: ${u.pix}</p>
                                 <p class="text-[8px] text-slate-400">Indicador: ${u.indicado_por || 'Direto'}</p>
                             </div>
-                            <div class="flex gap-1">
+                            <div class="flex flex-col gap-2">
                                 ${!isLib ? 
-                                    `<button onclick="aprovar('${id}')" class="btn-gold px-3 py-2 rounded text-[9px] uppercase">Liberar</button>` : 
-                                    `<a href="${linkZap}" target="_blank" class="bg-green-600 text-white px-3 py-2 rounded text-[9px] font-black italic text-center uppercase tracking-tighter">Enviar Acesso</a>`
+                                    `<button onclick="aprovar('${id}')" class="btn-gold px-4 py-2 rounded text-[10px] uppercase">Liberar</button>` : 
+                                    `<a href="${linkZap}" target="_blank" class="bg-green-600 text-white px-3 py-2 rounded text-[9px] font-black text-center uppercase">Enviar Cadastro</a>`
                                 }
-                                <button onclick="remover('${id}')" class="bg-red-600/20 text-red-500 px-2 py-2 rounded text-[9px]">X</button>
+                                <button onclick="remover('${id}')" class="text-red-500/50 text-[8px] font-bold">EXCLUIR</button>
                             </div>
                         </div>
                         <div class="flex gap-2 bg-black/40 p-2 rounded-lg overflow-x-auto">
-                            ${fHtml || '<p class="text-[8px] text-slate-600 font-bold uppercase italic">Aguardando Prints</p>'}
+                            ${fHtml || '<p class="text-[8px] text-slate-600 font-bold uppercase italic">Sem Prints</p>'}
                         </div>
                     </div>`;
             });
             document.getElementById('contador').innerText = count + " LÍDERES NO SISTEMA";
         });
 
-        function aprovar(id) { if(confirm("Confirmar ativação deste líder?")) database.ref('solicitacoes/'+id).update({status:'liberado'}); }
+        function aprovar(id) { if(confirm("Confirmar ativação?")) database.ref('solicitacoes/'+id).update({status:'liberado'}); }
         function remover(id) { if(confirm("Remover permanentemente?")) database.ref('solicitacoes/'+id).remove(); }
     </script>
 </body>
