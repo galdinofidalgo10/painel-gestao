@@ -25,9 +25,12 @@
         <div id="lista" class="space-y-4"></div>
     </div>
 
+    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    
     <script>
+        // Configuração do seu Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyCZIP0M0M8FqC_LAtI9I36e_IIn_V-C4m4",
             authDomain: "ajuda-mutua-7d99a.firebaseapp.com",
@@ -39,6 +42,7 @@
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
+        // Monitoramento em tempo real das solicitações
         database.ref('solicitacoes/').on('value', (snap) => {
             const list = document.getElementById('lista');
             list.innerHTML = "";
@@ -50,6 +54,7 @@
                 const id = child.key;
                 const isLib = u.status === 'liberado';
                 
+                // Carregar comprovantes (fotos)
                 let fHtml = "";
                 if(u.comprovantes) {
                     u.comprovantes.forEach(img => {
@@ -57,13 +62,15 @@
                     });
                 }
 
-                // LINK CORRIGIDO PARA O SEU REPOSITÓRIO ATUAL
-                // Verifique se a pasta 'cadastro' existe no GitHub e se o arquivo lá dentro se chama 'index.html'
-                const urlBase = "https://galdinofidalgo10.github.io/ajuda-mutua/cadastro/";
-                const linkCadastro = `${urlBase}?n1=${encodeURIComponent(u.nome)}&p1=${encodeURIComponent(u.pix)}`;
+                // URL corrigida para a raiz do seu GitHub (ajuda-mutua/index.html)
+                const urlBase = "https://galdinofidalgo10.github.io/ajuda-mutua/";
                 
-                const textoZap = encodeURIComponent(`Olá ${u.nome}! ✅\nCadastre seu indicado aqui:\n${linkCadastro}`);
-                const linkZap = `https://api.whatsapp.com/send?phone=55${u.whatsapp}&text=${textoZap}`;
+                // Criar link de convite: o indicado vira o novo recebedor (padrinho)
+                const linkConvite = `${urlBase}?n1=${encodeURIComponent(u.nome)}&p1=${encodeURIComponent(u.pix)}`;
+                
+                // Mensagem personalizada para o WhatsApp
+                const msg = `Olá ${u.nome}! ✅\nSeu acesso no Protocolo Elite foi liberado!\n\nAgora você já pode convidar seus amigos. Envie o seu link de convite abaixo para eles:\n\n🔗 ${linkConvite}`;
+                const linkZap = `https://api.whatsapp.com/send?phone=55${u.whatsapp}&text=${encodeURIComponent(msg)}`;
 
                 list.innerHTML += `
                     <div class="glass-card p-4 ${isLib ? 'status-liberado' : 'status-pendente'}">
@@ -71,25 +78,36 @@
                             <div>
                                 <h3 class="font-black text-sm uppercase leading-tight">${u.nome}</h3>
                                 <p class="text-[9px] text-yellow-500 font-bold">PIX: ${u.pix}</p>
+                                <p class="text-[8px] text-slate-400">Indicado por: ${u.indicado_por || 'Sistema'}</p>
                             </div>
                             <div class="flex flex-col gap-2">
                                 ${!isLib ? 
-                                    `<button onclick="aprovar('${id}')" class="btn-gold px-4 py-2 rounded text-[10px] uppercase">Liberar</button>` : 
-                                    `<a href="${linkZap}" target="_blank" class="bg-green-600 text-white px-3 py-2 rounded text-[9px] font-black text-center uppercase">Enviar Cadastro</a>`
+                                    `<button onclick="aprovar('${id}')" class="btn-gold px-4 py-2 rounded text-[10px] uppercase shadow-lg shadow-yellow-500/10">Liberar</button>` : 
+                                    `<a href="${linkZap}" target="_blank" class="bg-green-600 text-white px-3 py-2 rounded text-[9px] font-black text-center uppercase">Enviar Convite</a>`
                                 }
-                                <button onclick="remover('${id}')" class="text-red-500/30 text-[8px] font-bold">EXCLUIR</button>
+                                <button onclick="remover('${id}')" class="text-red-500/30 text-[8px] font-bold hover:text-red-500 transition-colors">EXCLUIR</button>
                             </div>
                         </div>
                         <div class="flex gap-2 bg-black/40 p-2 rounded-lg overflow-x-auto border border-white/5">
-                            ${fHtml || '<p class="text-[8px] text-slate-600 font-bold uppercase italic">Sem Prints</p>'}
+                            ${fHtml || '<p class="text-[8px] text-slate-600 font-bold uppercase italic">Sem Comprovantes</p>'}
                         </div>
                     </div>`;
             });
             document.getElementById('contador').innerText = count + " REGISTROS";
         });
 
-        function aprovar(id) { if(confirm("Liberar acesso?")) database.ref('solicitacoes/'+id).update({status:'liberado'}); }
-        function remover(id) { if(confirm("Excluir?")) database.ref('solicitacoes/'+id).remove(); }
+        // Funções de Controle
+        function aprovar(id) { 
+            if(confirm("Deseja liberar o acesso deste usuário?")) {
+                database.ref('solicitacoes/'+id).update({status:'liberado'}); 
+            }
+        }
+
+        function remover(id) { 
+            if(confirm("Tem certeza que deseja excluir permanentemente este registro?")) {
+                database.ref('solicitacoes/'+id).remove(); 
+            }
+        }
     </script>
 </body>
 </html>
