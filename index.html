@@ -57,10 +57,12 @@
                     });
                 }
 
-                // CORREÇÃO DO LINK: Verifique se a pasta se chama 'cadastro' no seu GitHub
-                const linkCadastro = "https://galdinofidalgo10.github.io/ajuda-mutua/cadastro/index.html?n1=" + encodeURIComponent(u.nome) + "&p1=" + encodeURIComponent(u.pix);
+                // LINK CORRIGIDO PARA O SEU REPOSITÓRIO ATUAL
+                // Verifique se a pasta 'cadastro' existe no GitHub e se o arquivo lá dentro se chama 'index.html'
+                const urlBase = "https://galdinofidalgo10.github.io/ajuda-mutua/cadastro/";
+                const linkCadastro = `${urlBase}?n1=${encodeURIComponent(u.nome)}&p1=${encodeURIComponent(u.pix)}`;
                 
-                const textoZap = encodeURIComponent(`Olá ${u.nome}! Aqui está o seu link de convite para a rede. ✅\n\nEnvie este link para seus indicados se cadastrarem:\n${linkCadastro}`);
+                const textoZap = encodeURIComponent(`Olá ${u.nome}! ✅\nCadastre seu indicado aqui:\n${linkCadastro}`);
                 const linkZap = `https://api.whatsapp.com/send?phone=55${u.whatsapp}&text=${textoZap}`;
 
                 list.innerHTML += `
@@ -69,26 +71,25 @@
                             <div>
                                 <h3 class="font-black text-sm uppercase leading-tight">${u.nome}</h3>
                                 <p class="text-[9px] text-yellow-500 font-bold">PIX: ${u.pix}</p>
-                                <p class="text-[8px] text-slate-400 italic">Indicado por: ${u.indicado_por || 'Direto'}</p>
                             </div>
                             <div class="flex flex-col gap-2">
                                 ${!isLib ? 
-                                    `<button onclick="aprovar('${id}')" class="btn-gold px-4 py-2 rounded text-[10px] uppercase shadow-lg shadow-yellow-500/20">Liberar Acesso</button>` : 
-                                    `<a href="${linkZap}" target="_blank" class="bg-green-600 text-white px-3 py-2 rounded text-[9px] font-black text-center uppercase">Enviar Link Zap</a>`
+                                    `<button onclick="aprovar('${id}')" class="btn-gold px-4 py-2 rounded text-[10px] uppercase">Liberar</button>` : 
+                                    `<a href="${linkZap}" target="_blank" class="bg-green-600 text-white px-3 py-2 rounded text-[9px] font-black text-center uppercase">Enviar Cadastro</a>`
                                 }
                                 <button onclick="remover('${id}')" class="text-red-500/30 text-[8px] font-bold">EXCLUIR</button>
                             </div>
                         </div>
                         <div class="flex gap-2 bg-black/40 p-2 rounded-lg overflow-x-auto border border-white/5">
-                            ${fHtml || '<p class="text-[8px] text-slate-600 font-bold uppercase italic">Sem Comprovantes</p>'}
+                            ${fHtml || '<p class="text-[8px] text-slate-600 font-bold uppercase italic">Sem Prints</p>'}
                         </div>
                     </div>`;
             });
-            document.getElementById('contador').innerText = count + " USUÁRIOS NO SISTEMA";
+            document.getElementById('contador').innerText = count + " REGISTROS";
         });
 
-        function aprovar(id) { if(confirm("Confirmar ativação?")) database.ref('solicitacoes/'+id).update({status:'liberado'}); }
-        function remover(id) { if(confirm("Remover permanentemente?")) database.ref('solicitacoes/'+id).remove(); }
+        function aprovar(id) { if(confirm("Liberar acesso?")) database.ref('solicitacoes/'+id).update({status:'liberado'}); }
+        function remover(id) { if(confirm("Excluir?")) database.ref('solicitacoes/'+id).remove(); }
     </script>
 </body>
 </html>
