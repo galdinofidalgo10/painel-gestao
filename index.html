@@ -2,51 +2,71 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestão Pro | Protocolo Elite</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Gestão Elite | 3 PIX</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         body { background: #020617; color: #f8fafc; font-family: 'Montserrat', sans-serif; }
         .glass-card { background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 20px; }
-        .btn-approve { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; font-weight: 900; }
-        .btn-delete { background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); color: white; font-weight: 900; }
         
-        /* Miniaturas dos 3 Prints */
-        .print-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; max-width: 300px; }
-        .img-preview-container { aspect-ratio: 1/1; border-radius: 12px; overflow: hidden; border: 2px solid #b8860b; background: #000; cursor: pointer; position: relative; }
-        .img-preview-container img { width: 100%; height: 100%; object-fit: cover; }
-        .print-label { font-size: 7px; color: #fde047; font-weight: 900; text-align: center; margin-bottom: 4px; text-transform: uppercase; }
+        /* Grid de 3 Prints */
+        .print-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; max-width: 320px; }
+        .img-preview-container { 
+            aspect-ratio: 3/4; 
+            border-radius: 12px; 
+            overflow: hidden; 
+            border: 2px solid rgba(212, 175, 55, 0.4); 
+            background: #000; 
+            cursor: pointer; 
+            position: relative;
+            z-index: 10;
+        }
+        .img-preview-container img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+        .img-preview-container:active { transform: scale(0.95); border-color: #fde047; }
 
-        /* Modal do Zoom */
-        #modalZoom { display: none; position: fixed; z-index: 1000; inset: 0; background: rgba(0,0,0,0.95); align-items: center; justify-content: center; padding: 20px; }
-        #modalZoom img { max-width: 100%; max-height: 90vh; border-radius: 10px; border: 3px solid #fde047; }
-        .close-zoom { position: absolute; top: 20px; right: 20px; color: white; font-size: 40px; font-weight: bold; cursor: pointer; }
+        /* MODAL DE ZOOM (CORRIGIDO) */
+        #modalZoom { 
+            display: none; 
+            position: fixed; 
+            inset: 0; 
+            background: rgba(0,0,0,0.98); 
+            z-index: 9999; /* Força ficar na frente de tudo */
+            align-items: center; 
+            justify-content: center; 
+            flex-direction: column;
+        }
+        #modalZoom img { 
+            max-width: 95%; 
+            max-height: 80vh; 
+            border: 2px solid #fde047; 
+            border-radius: 8px;
+            box-shadow: 0 0 50px rgba(212, 175, 55, 0.3);
+        }
+        .close-btn { 
+            margin-top: 20px; 
+            background: #fde047; 
+            color: #000; 
+            padding: 12px 30px; 
+            border-radius: 50px; 
+            font-weight: 900; 
+            text-transform: uppercase;
+            cursor: pointer;
+        }
     </style>
 </head>
-<body class="p-4 md:p-10">
+<body>
 
-    <div id="modalZoom" onclick="fecharZoom()">
-        <span class="close-zoom">&times;</span>
+    <div id="modalZoom">
         <img id="imgFull" src="">
+        <div class="close-btn" onclick="fecharZoom()">Fechar Imagem</div>
     </div>
 
-    <div class="max-w-6xl mx-auto">
-        <header class="flex justify-between items-center mb-10 border-b border-white/5 pb-6">
-            <div>
-                <h1 class="text-3xl font-black text-yellow-500 uppercase italic">Gestão Elite</h1>
-                <p class="text-[10px] text-slate-500 font-bold uppercase tracking-[0.4em] mt-1 italic">Validação de Triplo PIX</p>
-            </div>
-            <div class="text-right">
-                <span id="contador" class="text-4xl font-black text-white">0</span>
-                <p class="text-[8px] text-yellow-500 font-bold uppercase">Fila</p>
-            </div>
+    <div class="max-w-5xl mx-auto p-4">
+        <header class="flex justify-between items-center mb-10 py-6 border-b border-white/10">
+            <h1 class="text-2xl font-black text-yellow-500 uppercase italic">Painel de Conferência</h1>
+            <div id="contador" class="text-3xl font-black text-white">0</div>
         </header>
-
-        <div class="flex gap-2 mb-8">
-            <button onclick="renderizar('pendente')" class="bg-slate-800 px-6 py-3 rounded-xl text-[10px] font-black uppercase italic hover:bg-slate-700 transition-all">Pendentes</button>
-            <button onclick="renderizar('liberado')" class="bg-slate-800 px-6 py-3 rounded-xl text-[10px] font-black uppercase italic hover:bg-slate-700 transition-all">Liberados</button>
-        </div>
 
         <div id="listaSolicitacoes" class="space-y-6">
             </div>
@@ -55,6 +75,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
     <script>
+        // ... sua config do firebase ...
         const firebaseConfig = {
             apiKey: "AIzaSyCZIP0M0M8FqC_LAtI9I36e_IIn_V-C4m4",
             authDomain: "ajuda-mutua-7d99a.firebaseapp.com",
@@ -66,92 +87,57 @@
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
-        let todasSolicitacoes = {};
-        window.filtroAtual = 'pendente';
-
-        database.ref('solicitacoes/').on('value', (snapshot) => {
-            todasSolicitacoes = snapshot.val() || {};
-            renderizar(window.filtroAtual);
-        });
-
+        // FUNÇÕES DE ZOOM
         function abrirZoom(url) {
-            if(!url || url.includes('placehold')) return;
-            document.getElementById('imgFull').src = url;
-            document.getElementById('modalZoom').style.display = 'flex';
+            console.log("Tentando abrir:", url); // Para teste no console
+            const modal = document.getElementById('modalZoom');
+            const img = document.getElementById('imgFull');
+            img.src = url;
+            modal.style.display = 'flex';
         }
 
         function fecharZoom() {
             document.getElementById('modalZoom').style.display = 'none';
         }
 
-        function renderizar(filtro) {
-            window.filtroAtual = filtro;
+        database.ref('solicitacoes/').on('value', (snap) => {
             const container = document.getElementById('listaSolicitacoes');
             container.innerHTML = "";
             let cont = 0;
-
-            Object.keys(todasSolicitacoes).reverse().forEach(id => {
-                const item = todasSolicitacoes[id];
-                if (item.status === filtro) {
+            
+            const dados = snap.val() || {};
+            Object.keys(dados).reverse().forEach(id => {
+                const item = dados[id];
+                if(item.status === 'pendente') {
                     cont++;
-                    
-                    // Links dos 3 prints vindos do banco
-                    const p1 = item.print1_url || "https://placehold.co/300x300/020617/b8860b?text=P1";
-                    const p2 = item.print2_url || "https://placehold.co/300x300/020617/b8860b?text=P2";
-                    const p3 = item.print3_url || "https://placehold.co/300x300/020617/b8860b?text=P3";
-                    
-                    const card = `
-                        <div class="glass-card p-6 flex flex-col lg:flex-row items-center gap-8 border-l-4 ${item.status === 'liberado' ? 'border-green-500' : 'border-yellow-500'}">
-                            
-                            <div class="flex flex-col items-center">
-                                <div class="print-grid">
-                                    <div class="flex flex-col"><span class="print-label italic">PIX 1</span><div class="img-preview-container shadow-xl" onclick="abrirZoom('${p1}')"><img src="${p1}"></div></div>
-                                    <div class="flex flex-col"><span class="print-label italic">PIX 2</span><div class="img-preview-container shadow-xl" onclick="abrirZoom('${p2}')"><img src="${p2}"></div></div>
-                                    <div class="flex flex-col"><span class="print-label italic">PIX 3</span><div class="img-preview-container shadow-xl" onclick="abrirZoom('${p3}')"><img src="${p3}"></div></div>
-                                </div>
-                                <p class="text-[7px] text-slate-500 font-black mt-3 uppercase tracking-widest">Clique na imagem para ampliar</p>
-                            </div>
+                    const p1 = item.print1_url || "https://placehold.co/400x600/1e293b/fde047?text=PIX+1";
+                    const p2 = item.print2_url || "https://placehold.co/400x600/1e293b/fde047?text=PIX+2";
+                    const p3 = item.print3_url || "https://placehold.co/400x600/1e293b/fde047?text=PIX+3";
 
-                            <div class="flex-1 text-center lg:text-left">
-                                <h3 class="font-black text-white uppercase italic text-xl mb-2">${item.nome}</h3>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1 text-[11px] font-bold">
-                                    <p class="text-slate-400 uppercase">WhatsApp: <span class="text-white">${item.whatsapp}</span></p>
-                                    <p class="text-slate-400 uppercase">Indicado por: <span class="text-yellow-500 italic">${item.referencia || 'Direto'}</span></p>
-                                    <p class="text-slate-400 uppercase">Data/Hora: <span class="text-slate-300 font-mono">${item.data || '--'}</span></p>
-                                </div>
+                    container.innerHTML += `
+                        <div class="glass-card p-6 flex flex-col md:flex-row gap-6">
+                            <div class="print-grid">
+                                <div class="img-preview-container" onclick="abrirZoom('${p1}')"><img src="${p1}"></div>
+                                <div class="img-preview-container" onclick="abrirZoom('${p2}')"><img src="${p2}"></div>
+                                <div class="img-preview-container" onclick="abrirZoom('${p3}')"><img src="${p3}"></div>
                             </div>
-
-                            <div class="flex flex-col gap-2 w-full lg:w-[220px]">
-                                ${item.status === 'pendente' ? `
-                                    <button onclick="aprovar('${id}', '${item.nome}', '${item.whatsapp}')" class="btn-approve py-5 rounded-2xl text-[10px] uppercase shadow-lg shadow-green-900/30 active:scale-95 transition-all">Validar e Liberar</button>
-                                    <button onclick="excluir('${id}', '${item.nome}')" class="bg-red-500/10 text-red-500 py-3 rounded-xl text-[9px] uppercase font-black border border-red-500/20 hover:bg-red-500 hover:text-white transition-all">Recusar/Excluir</button>
-                                ` : `
-                                    <button onclick="recomendar('${item.nome}', '${item.whatsapp}')" class="bg-white/5 text-white py-4 rounded-xl text-[10px] uppercase font-black border border-white/10 italic">Reenviar Link</button>
-                                    <button onclick="excluir('${id}', '${item.nome}')" class="btn-delete py-3 rounded-xl text-[9px] uppercase shadow-lg italic">Remover Registro</button>
-                                `}
+                            <div class="flex-1">
+                                <h2 class="text-xl font-black uppercase italic">${item.nome}</h2>
+                                <p class="text-xs text-slate-400 mt-2">WhatsApp: ${item.whatsapp}</p>
+                                <button onclick="aprovar('${id}', '${item.nome}', '${item.whatsapp}')" class="mt-4 w-full bg-green-600 p-4 rounded-xl font-black uppercase text-[10px]">Liberar Acesso</button>
                             </div>
                         </div>
                     `;
-                    container.innerHTML += card;
                 }
             });
             document.getElementById('contador').innerText = cont;
-        }
+        });
 
         function aprovar(id, nome, zap) {
-            if(!confirm(`Você conferiu os 3 prints de ${nome}?`)) return;
-            database.ref('solicitacoes/'+id).update({status:'liberado'}).then(() => recomendar(nome, zap));
-        }
-
-        function recomendar(nome, zap) {
-            const link = `https://galdinofidalgo10.github.io/ajuda-p2p/index.html?user=${encodeURIComponent(nome)}`;
-            const msg = encodeURIComponent(`🚀 *PROTOCOLO ELITE: TUDO PRONTO!*\n\nOlá *${nome}*, os 3 PIX foram validados com sucesso.\n\nSeu escritório virtual já está liberado:\n👉 ${link}`);
-            window.open(`https://api.whatsapp.com/send?phone=${zap}&text=${msg}`, '_blank');
-        }
-
-        function excluir(id, nome) {
-            if(!confirm(`Apagar registro de ${nome}?`)) return;
-            database.ref('solicitacoes/'+id).remove();
+            database.ref('solicitacoes/'+id).update({status:'liberado'}).then(() => {
+                const link = `https://galdinofidalgo10.github.io/ajuda-p2p/index.html?user=${encodeURIComponent(nome)}`;
+                window.open(`https://api.whatsapp.com/send?phone=${zap}&text=Liberado!%20Link:%20${link}`);
+            });
         }
     </script>
 </body>
