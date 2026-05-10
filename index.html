@@ -2,42 +2,60 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestão Elite | 3 PIX</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Painel Gestão | Protocolo Elite</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
-        body { background: #020617; color: #f8fafc; font-family: 'Montserrat', sans-serif; }
-        .glass-card { background: rgba(15, 23, 42, 0.95); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 20px; }
-        .thumb-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 15px; }
-        .thumb { aspect-ratio: 3/4; border-radius: 8px; overflow: hidden; border: 1px solid #b8860b; background: #000; cursor: pointer; }
-        .thumb img { width: 100%; height: 100%; object-fit: cover; }
+        body { background: #020617; color: #f8fafc; font-family: 'Montserrat', sans-serif; overflow-x: hidden; }
+        .glass-card { background: rgba(15, 23, 42, 0.95); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
         
-        #modalZoom { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 9999; align-items: center; justify-content: center; flex-direction: column; }
-        #modalZoom img { max-width: 90%; max-height: 75vh; border: 2px solid #fde047; border-radius: 10px; }
+        /* Grid de Miniaturas */
+        .thumb-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
+        .thumb { aspect-ratio: 3/4; border-radius: 12px; overflow: hidden; border: 2px solid #b8860b; background: #000; position: relative; cursor: zoom-in; }
+        .thumb img { width: 100%; height: 100%; object-fit: cover; }
+        .thumb::after { content: 'VER'; position: absolute; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; font-size: 8px; font-weight: 900; color: #fde047; opacity: 0; transition: 0.3s; }
+        .thumb:hover::after { opacity: 1; }
+
+        /* Modal Zoom Full */
+        #modalZoom { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 9999; align-items: center; justify-content: center; flex-direction: column; padding: 20px; }
+        #modalZoom img { max-width: 100%; max-height: 80vh; border-radius: 15px; border: 2px solid #fde047; box-shadow: 0 0 50px rgba(253, 224, 71, 0.2); }
+        
+        .btn-zap { background: linear-gradient(135deg, #25d366 0%, #128c7e 100%); transition: 0.3s; }
+        .btn-zap:active { scale: 0.95; }
+        .badge-pendente { background: rgba(253, 224, 71, 0.1); color: #fde047; border: 1px solid rgba(253, 224, 71, 0.2); padding: 4px 10px; border-radius: 50px; font-size: 9px; font-weight: 900; text-transform: uppercase; }
     </style>
 </head>
-<body class="p-4">
+<body class="p-4 md:p-10">
 
     <div id="modalZoom" onclick="this.style.display='none'">
         <img id="imgFull" src="">
-        <button class="mt-8 bg-white text-black px-10 py-3 rounded-full font-black uppercase text-xs">FECHAR</button>
+        <p class="mt-6 text-white font-black uppercase text-[10px] tracking-[0.3em]">Toque para fechar</p>
     </div>
 
     <div class="max-w-xl mx-auto">
-        <header class="flex justify-between items-center mb-8 py-4 border-b border-white/10">
-            <h1 class="text-xl font-black text-yellow-500 uppercase italic">Gestão de Prints</h1>
-            <div id="contador" class="text-2xl font-black">0</div>
+        <header class="flex justify-between items-center mb-10 pb-6 border-b border-white/5">
+            <div>
+                <h1 class="text-2xl font-black text-yellow-500 uppercase italic leading-none">Gestão Pro</h1>
+                <p class="text-[8px] text-slate-500 font-bold uppercase tracking-[0.4em] mt-2">Conferência de Comprovantes</p>
+            </div>
+            <div class="text-right">
+                <span id="contador" class="text-4xl font-black text-white italic">0</span>
+                <p class="text-[8px] text-yellow-500 font-black uppercase">Fila</p>
+            </div>
         </header>
 
-        <div id="lista" class="space-y-6">
-            <p class="text-center text-slate-500 text-xs uppercase animate-pulse">Carregando registros...</p>
+        <div id="listaSolicitacoes" class="space-y-8">
+            <div class="text-center py-20">
+                <p class="text-slate-600 font-bold uppercase text-xs animate-pulse">Sincronizando com Banco de Dados...</p>
+            </div>
         </div>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
     <script>
+        // CONFIGURAÇÃO DO SEU FIREBASE
         const firebaseConfig = {
             apiKey: "AIzaSyCZIP0M0M8FqC_LAtI9I36e_IIn_V-C4m4",
             authDomain: "ajuda-mutua-7d99a.firebaseapp.com",
@@ -49,53 +67,89 @@
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
-        function abrir(url) {
-            if(!url || url.length < 100) return alert("Imagem não carregou corretamente no envio.");
+        // Função para Abrir a Imagem com Segurança
+        function verPrint(url) {
+            if (!url || url.length < 50) {
+                alert("⚠️ Erro: Esta imagem está corrompida ou é muito antiga. Recomende que o usuário envie novamente.");
+                return;
+            }
             document.getElementById('imgFull').src = url;
             document.getElementById('modalZoom').style.display = 'flex';
         }
 
-        database.ref('solicitacoes/').on('value', (snap) => {
-            const list = document.getElementById('lista');
-            list.innerHTML = "";
-            let cont = 0;
-            const dados = snap.val() || {};
+        // Carregar Dados em Tempo Real
+        database.ref('solicitacoes/').on('value', (snapshot) => {
+            const container = document.getElementById('listaSolicitacoes');
+            const contadorEl = document.getElementById('contador');
+            container.innerHTML = "";
+            let totalPendente = 0;
 
+            const dados = snapshot.val() || {};
+            
             Object.keys(dados).reverse().forEach(id => {
-                const item = dados[id];
-                if(item.status === 'pendente') {
-                    cont++;
-                    list.innerHTML += `
-                        <div class="glass-card p-4 border-l-4 border-yellow-500">
+                const solicitacao = dados[id];
+                
+                if (solicitacao.status === 'pendente') {
+                    totalPendente++;
+                    
+                    const card = `
+                        <div class="glass-card p-5 border-l-4 border-yellow-500">
                             <div class="thumb-grid">
-                                <div class="thumb" onclick="abrir('${item.print1_url}')"><img src="${item.print1_url || ''}"></div>
-                                <div class="thumb" onclick="abrir('${item.print2_url}')"><img src="${item.print2_url || ''}"></div>
-                                <div class="thumb" onclick="abrir('${item.print3_url}')"><img src="${item.print3_url || ''}"></div>
+                                <div class="thumb" onclick="verPrint('${solicitacao.print1_url}')">
+                                    <img src="${solicitacao.print1_url || ''}" onerror="this.src='https://placehold.co/400x600/020617/b8860b?text=ERRO+IMG'">
+                                </div>
+                                <div class="thumb" onclick="verPrint('${solicitacao.print2_url}')">
+                                    <img src="${solicitacao.print2_url || ''}" onerror="this.src='https://placehold.co/400x600/020617/b8860b?text=ERRO+IMG'">
+                                </div>
+                                <div class="thumb" onclick="verPrint('${solicitacao.print3_url}')">
+                                    <img src="${solicitacao.print3_url || ''}" onerror="this.src='https://placehold.co/400x600/020617/b8860b?text=ERRO+IMG'">
+                                </div>
                             </div>
-                            <h2 class="font-black uppercase italic text-lg text-white mb-1">${item.nome}</h2>
-                            <p class="text-[10px] text-slate-400 font-bold mb-4">WHATSAPP: ${item.whatsapp}</p>
-                            
+
+                            <div class="mb-5">
+                                <div class="flex justify-between items-start">
+                                    <h3 class="text-xl font-black text-white uppercase italic tracking-tighter">${solicitacao.nome}</h3>
+                                    <span class="badge-pendente">Aguardando</span>
+                                </div>
+                                <p class="text-[10px] text-slate-500 font-bold uppercase mt-1">WhatsApp: ${solicitacao.whatsapp}</p>
+                            </div>
+
                             <div class="flex gap-2">
-                                <button onclick="liberar('${id}','${item.nome}','${item.whatsapp}')" class="flex-1 bg-green-600 py-4 rounded-xl text-[10px] font-black uppercase">Liberar e Enviar Zap</button>
-                                <button onclick="remover('${id}')" class="bg-red-600 px-4 rounded-xl text-[10px] font-black uppercase italic">🗑️</button>
+                                <button onclick="liberar('${id}', '${solicitacao.nome}', '${solicitacao.whatsapp}')" class="flex-1 btn-zap py-4 rounded-xl text-[10px] font-black uppercase italic shadow-lg shadow-green-900/20">
+                                    Aprovar e Chamar Zap
+                                </button>
+                                <button onclick="excluir('${id}', '${solicitacao.nome}')" class="bg-red-500/10 text-red-500 px-5 rounded-xl border border-red-500/20 hover:bg-red-500 hover:text-white transition-all">
+                                    🗑️
+                                </button>
                             </div>
                         </div>
                     `;
+                    container.innerHTML += card;
                 }
             });
-            document.getElementById('contador').innerText = cont;
+
+            contadorEl.innerText = totalPendente;
+            if(totalPendente === 0) {
+                container.innerHTML = `<div class="text-center py-20 text-slate-600 font-bold uppercase text-[10px] tracking-widest italic">Nenhum PIX pendente no momento</div>`;
+            }
         });
 
+        // Ação: Liberar e Enviar Link no Zap
         function liberar(id, nome, zap) {
-            database.ref('solicitacoes/'+id).update({status:'liberado'}).then(() => {
-                const link = `https://galdinofidalgo10.github.io/ajuda-p2p/index.html?user=${encodeURIComponent(nome)}`;
-                const msg = encodeURIComponent(`🚀 *ACESSO LIBERADO!*\n\nOlá *${nome}*, seu acesso foi ativado.\n\nLink do escritório:\n👉 ${link}`);
-                window.open(`https://api.whatsapp.com/send?phone=${zap}&text=${msg}`, '_blank');
+            if(!confirm(`Liberar acesso para ${nome}?`)) return;
+
+            database.ref('solicitacoes/' + id).update({ status: 'liberado' }).then(() => {
+                const linkElite = `https://galdinofidalgo10.github.io/ajuda-p2p/index.html?user=${encodeURIComponent(nome)}`;
+                const mensagem = encodeURIComponent(`🚀 *PROTOCOLO ELITE LIBERADO*\n\nOlá *${nome}*, conferi seus 3 comprovantes e seu acesso já está ativo!\n\nSeu Escritório Virtual:\n👉 ${linkElite}`);
+                window.open(`https://api.whatsapp.com/send?phone=${zap}&text=${mensagem}`, '_blank');
             });
         }
 
-        function remover(id) {
-            if(confirm("Excluir registro?")) database.ref('solicitacoes/'+id).remove();
+        // Ação: Excluir Registro Corrompido ou Falso
+        function excluir(id, nome) {
+            if(confirm(`Deseja realmente apagar o registro de ${nome}?`)) {
+                database.ref('solicitacoes/' + id).remove();
+            }
         }
     </script>
 </body>
