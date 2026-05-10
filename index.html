@@ -3,39 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestão Elite | Protocolo</title>
+    <title>Gestão Elite | 3 PIX</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         body { background: #020617; color: #f8fafc; font-family: 'Montserrat', sans-serif; }
-        .glass-card { background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 20px; }
-        .print-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; max-width: 280px; }
-        .thumb { aspect-ratio: 3/4; border-radius: 10px; overflow: hidden; border: 2px solid #b8860b; background: #000; cursor: pointer; }
+        .glass-card { background: rgba(15, 23, 42, 0.95); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 20px; }
+        .thumb-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 15px; }
+        .thumb { aspect-ratio: 3/4; border-radius: 8px; overflow: hidden; border: 1px solid #b8860b; background: #000; cursor: pointer; }
         .thumb img { width: 100%; height: 100%; object-fit: cover; }
         
-        /* Modal Zoom */
         #modalZoom { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 9999; align-items: center; justify-content: center; flex-direction: column; }
-        #modalZoom img { max-width: 90%; max-height: 80vh; border: 2px solid #fde047; border-radius: 10px; }
-
-        .btn-zap { background: linear-gradient(135deg, #25d366 0%, #128c7e 100%); color: white; font-weight: 900; }
-        .btn-delete { background: #ef4444; color: white; font-weight: 900; }
+        #modalZoom img { max-width: 90%; max-height: 75vh; border: 2px solid #fde047; border-radius: 10px; }
     </style>
 </head>
-<body class="p-4 md:p-10">
+<body class="p-4">
 
     <div id="modalZoom" onclick="this.style.display='none'">
         <img id="imgFull" src="">
-        <button class="mt-6 bg-white text-black px-6 py-2 rounded-full font-bold uppercase text-[10px]">Fechar</button>
+        <button class="mt-8 bg-white text-black px-10 py-3 rounded-full font-black uppercase text-xs">FECHAR</button>
     </div>
 
-    <div class="max-w-5xl mx-auto">
-        <header class="flex justify-between items-center mb-10 pb-6 border-b border-white/10">
-            <h1 class="text-2xl font-black text-yellow-500 uppercase italic">Gestão de Prints</h1>
-            <div id="contador" class="text-3xl font-black">0</div>
+    <div class="max-w-xl mx-auto">
+        <header class="flex justify-between items-center mb-8 py-4 border-b border-white/10">
+            <h1 class="text-xl font-black text-yellow-500 uppercase italic">Gestão de Prints</h1>
+            <div id="contador" class="text-2xl font-black">0</div>
         </header>
 
         <div id="lista" class="space-y-6">
-            </div>
+            <p class="text-center text-slate-500 text-xs uppercase animate-pulse">Carregando registros...</p>
+        </div>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
@@ -53,7 +50,7 @@
         const database = firebase.database();
 
         function abrir(url) {
-            if(!url) return;
+            if(!url || url.length < 100) return alert("Imagem não carregou corretamente no envio.");
             document.getElementById('imgFull').src = url;
             document.getElementById('modalZoom').style.display = 'flex';
         }
@@ -69,26 +66,18 @@
                 if(item.status === 'pendente') {
                     cont++;
                     list.innerHTML += `
-                        <div class="glass-card p-5 flex flex-col md:flex-row gap-6 items-center">
-                            <div class="print-grid">
+                        <div class="glass-card p-4 border-l-4 border-yellow-500">
+                            <div class="thumb-grid">
                                 <div class="thumb" onclick="abrir('${item.print1_url}')"><img src="${item.print1_url || ''}"></div>
                                 <div class="thumb" onclick="abrir('${item.print2_url}')"><img src="${item.print2_url || ''}"></div>
                                 <div class="thumb" onclick="abrir('${item.print3_url}')"><img src="${item.print3_url || ''}"></div>
                             </div>
+                            <h2 class="font-black uppercase italic text-lg text-white mb-1">${item.nome}</h2>
+                            <p class="text-[10px] text-slate-400 font-bold mb-4">WHATSAPP: ${item.whatsapp}</p>
                             
-                            <div class="flex-1 text-center md:text-left">
-                                <h2 class="text-xl font-black uppercase italic">${item.nome}</h2>
-                                <p class="text-xs text-slate-400 font-bold mb-4 uppercase">WhatsApp: ${item.whatsapp}</p>
-                                
-                                <div class="flex flex-col sm:flex-row gap-2">
-                                    <button onclick="liberar('${id}','${item.nome}','${item.whatsapp}')" class="btn-zap flex-1 py-4 rounded-xl text-[10px] uppercase shadow-lg active:scale-95">
-                                        ✅ Liberar e Enviar Zap
-                                    </button>
-                                    
-                                    <button onclick="remover('${id}')" class="btn-delete px-6 py-4 rounded-xl text-[10px] uppercase shadow-lg active:scale-95">
-                                        🗑️ Excluir
-                                    </button>
-                                </div>
+                            <div class="flex gap-2">
+                                <button onclick="liberar('${id}','${item.nome}','${item.whatsapp}')" class="flex-1 bg-green-600 py-4 rounded-xl text-[10px] font-black uppercase">Liberar e Enviar Zap</button>
+                                <button onclick="remover('${id}')" class="bg-red-600 px-4 rounded-xl text-[10px] font-black uppercase italic">🗑️</button>
                             </div>
                         </div>
                     `;
@@ -98,18 +87,15 @@
         });
 
         function liberar(id, nome, zap) {
-            if(!confirm(`Confirmar e enviar link para ${nome}?`)) return;
             database.ref('solicitacoes/'+id).update({status:'liberado'}).then(() => {
                 const link = `https://galdinofidalgo10.github.io/ajuda-p2p/index.html?user=${encodeURIComponent(nome)}`;
-                const msg = encodeURIComponent(`🚀 *ACESSO LIBERADO: PROTOCOLO ELITE*\n\nOlá *${nome}*, seu acesso foi ativado!\n\nEntre no seu escritório agora:\n👉 ${link}`);
+                const msg = encodeURIComponent(`🚀 *ACESSO LIBERADO!*\n\nOlá *${nome}*, seu acesso foi ativado.\n\nLink do escritório:\n👉 ${link}`);
                 window.open(`https://api.whatsapp.com/send?phone=${zap}&text=${msg}`, '_blank');
             });
         }
 
         function remover(id) {
-            if(confirm("Deseja apagar esse registro permanentemente?")) {
-                database.ref('solicitacoes/'+id).remove();
-            }
+            if(confirm("Excluir registro?")) database.ref('solicitacoes/'+id).remove();
         }
     </script>
 </body>
